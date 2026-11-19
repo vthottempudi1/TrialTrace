@@ -1,149 +1,188 @@
-# TrialTrace: Clinical Trial Evidence Intelligence Platform
+# TrialTrace
 
-**Evidence-grounded review of clinical-trial reporting.** Live dashboard (Google sign-in, allowlisted emails): https://trialtrace-dashboard-1061960202985.us-central1.run.app. For each trial, TrialTrace compares what the registry says with
-what the linked papers report, shows the exact evidence behind every statement, and leaves the decision to a person.
+### Clinical Trial Evidence Intelligence Platform
 
-It is a prototype and a portfolio project, not a validated tool. Read the problem it addresses and its limits first:
-[docs/PROBLEM_AND_POSITIONING.md](docs/PROBLEM_AND_POSITIONING.md).
+TrialTrace helps reviewers trace clinical-trial reporting back to its sources. It brings together ClinicalTrials.gov records and linked PubMed abstracts, checks whether registered outcomes are reported, and presents findings with supporting evidence and a review history.
 
-## What it does
+The project combines deterministic registry checks, an LLM abstract reader, evidence validation, and human review in a Streamlit dashboard.
 
-| Question | How it is answered | Status |
-|---|---|---|
-| 1. Has the trial posted results? | code, from the saved registry record | built |
-| 2. How long since primary completion? | code | built |
-| 3. Sponsor results record (this corpus only) | SQL counts, no stored score | built |
-| 4. Patterns across trials | named SQL queries | built |
-| 5a. Did a registered outcome change between registry versions? | code, from kept versions | built |
-| 5b. Do the posted results match the registered outcomes? | code | built |
-| 5b. Does a linked paper's abstract report a registered outcome? | rules baseline + LLM reader, quotes checked by code | built, evaluated on small sets |
-| 6. Do the side effects match? | LLM reads the abstract's safety statements, code checks every quote and number and applies the comparison rules | built, **parked since 2026-11-13** ([D86](docs/DESIGN_DECISIONS.md)): reading is usable (v6 unseen run: recall 70%, precision 86%), targets not met, numeric and window comparison NOT validated |
+[Open the dashboard](https://trialtrace-dashboard-1061960202985.us-central1.run.app)
 
-Around those checks: a risk-ordered review queue (approve, edit, reject, or unclear, each with a reason), an audit
-history that keeps the model's original answers apart from reviewer decisions, and reuse of stored model answers so the
-same question is never paid for twice.
+The hosted dashboard requires Google sign-in with an allowlisted email.
 
-A Streamlit dashboard (`dashboard/app.py`) has five tabs: All trials, One trial (with a Registry changes panel), Assisted review, Sponsors (results reporting by sponsor, counts only) and Patterns (fixed questions over the stored trials). Details of the first three: enter an NCT ID, Analyze Trial, see outcomes, papers and findings, and review each finding (Accept, Correct, Unable to determine; the model's answer is never changed). It has an All trials tab (counts of Needs review, Human-verified and Unresolved across every trial, each opening its findings). Analyze Trial shows the number of paid model calls first and asks for a click above 5. Each finding shows its source quote highlighted in the abstract, and the lists can be filtered by model status, role and trial. Findings and reviews can be downloaded as CSV or a Markdown report. Also built: Google sign-in with an email allowlist, Docker files, and deployment to Google Cloud Run with Cloud SQL ([docs/DEPLOY_GCP.md](docs/DEPLOY_GCP.md)). A small API exists but is not deployed. CI has not run yet. Safety is parked (see above); the safety holdouts v2 to v6 have all been run and now count as development data.
+## Project versions
 
-## How it works
+| Version | Scope | Status |
+| --- | --- | --- |
+| **v1 · Registry and abstract validation** | Validate registered trial outcomes against results published in the registry and linked paper abstracts. Track changes between captured registry versions, results-posting status, completion timelines, and sponsor reporting counts | Implemented |
+| **v2 · Safety** | Extract safety statements from abstracts and compare them with registry adverse-event evidence | Separate workstream in `trialtrace/safety/`, currently paused |
+| **v3 · Full-paper text analysis** | Validate registered outcomes against full paper texts and trace supporting evidence across paper sections | Planned extension |
 
-1. **Ingest** the registry record: the raw file is saved first, then parsed, with every value kept as citable evidence.
-   Every version seen is kept, so a change can be shown between two dated versions.
-2. **Find papers** for the trial in PubMed, save them, and check that each paper really names the trial.
-3. **Read** each registered outcome against each paper's abstract with an LLM, told which trial (NCT ID) it is reading
-   for. Code verifies every quote the LLM gives, where it sits in the abstract, and the paper type. A rules-only baseline
-   is an optional second reader (`--with-baseline`), stored as separate rows. Safety statements are read the same way
-   (`read-safety`) and compared with the registry's adverse-event table by plain code.
-4. **Roll up** to one finding per registered outcome (and per safety quantity) across the papers read; when the baseline
-   is on, disagreements between the two readers are marked.
-5. **Review**: findings are provisional until a person decides. High-risk ones come first.
+**All safety-related work belongs to project v2.** This includes adverse-event ingestion and parsing, database tables and migrations, statement extraction, numeric and time-window comparisons, assisted matching, review tools, and supporting documentation.
 
-Rules the code enforces: differences are described for review and never as accusations (a test blocks verdict words);
-unknown is never "no"; every claim cites evidence; nothing learns or changes itself. "Not identified" always means "not
-identified in the available text (abstract)", never that a paper omits the outcome.
+## What a reviewer can do
 
-## Run it
+- **Inspect a trial.** Open an NCT ID and explore registry outcomes, linked papers, findings, and cited evidence.
+- **Check reporting.** View results-posting status, time since primary completion, and differences between registered and posted outcomes.
+- **Trace outcomes across papers.** Review identified, unclear, and not-identified outcomes alongside highlighted abstract quotes.
+- **Review findings.** Accept, correct, or mark a finding as undetermined, with a reason and an audit history.
+- **Explore the stored corpus.** View sponsor reporting counts and fixed cross-trial queries.
+- **Export findings.** Download CSV and Markdown reports.
 
-Needs Python 3.12 and a PostgreSQL database.
+The dashboard provides All trials, One trial, Assisted review, Sponsors, and Patterns views. Review queues distinguish Needs review, Human-verified, and Unresolved findings.
+
+## Architecture
+
+```mermaid
+flowchart TB
+    subgraph Sources["External sources"]
+        CT["ClinicalTrials.gov API"]
+        PM["PubMed E-utilities"]
+    end
+    subgraph Pipeline["Python processing pipeline"]
+        ING["Fetch and parse registry records and papers"]
+        LINK["Check paper-to-trial links"]
+        REG["v1 Registry checks"]
+        MATCH["v1 Outcome-abstract matching"]
+        GUARD["Validate quotes and trial identity"]
+        ROLL["Combine evidence per outcome"]
+        REPORT["Build findings and review queue"]
+    end
+    RAW[("Raw source files by content hash")]
+    DB[("PostgreSQL<br/>Snapshots, evidence, papers, matches, reviews")]
+    MODEL["OpenAI abstract reader"]
+    DASH["Streamlit dashboard<br/>Google sign-in and reviewer decisions"]
+    API["Optional FastAPI service<br/>Stored data, reviews, exports"]
+    EXPORT["CSV and Markdown exports"]
+
+    CT --> ING
+    PM --> ING
+    ING --> RAW
+    ING --> DB
+    DB --> LINK
+    LINK --> MATCH
+    DB --> MATCH
+    MATCH <--> MODEL
+    MATCH --> GUARD
+    GUARD --> DB
+    DB --> REG
+    DB --> ROLL
+    REG --> REPORT
+    ROLL --> REPORT
+    REPORT --> DB
+    DB --> DASH
+    DASH -->|"Append review decisions"| DB
+    DB --> API
+    DASH --> EXPORT
+    API --> EXPORT
+```
+
+The dashboard uses the Python application and PostgreSQL directly. The optional API exposes stored data, exports, and review operations. Raw downloads preserve the source material behind parsed evidence. Safety v2 modules are grouped under `trialtrace/safety/` while that workstream is paused.
+
+### From a trial to a reviewed finding
+
+1. **Capture the registry record.** Save the raw response, record its content hash, and extract outcomes and citable evidence. Preserve each distinct version captured.
+2. **Collect candidate papers.** Retrieve PubMed records and abstracts, then check their connection to the trial.
+3. **Read each outcome-paper pair.** Give the LLM the registered outcome and abstract. Store its answer, supporting quote, and model metadata. An optional rules baseline provides a separate comparison.
+4. **Validate and combine evidence.** Check quoted text and offsets, apply trial-identity safeguards, and combine paper-level answers into one finding per registered outcome.
+5. **Review and export.** Present source evidence and record reviewer decisions separately from original predictions.
+
+Stored answers can be reused when inputs and model configuration match. The dashboard estimates new model calls and requests confirmation when an analysis needs more than five calls.
+
+### Registry snapshots and evidence scope
+
+The v1 registry and abstract workflow uses outcomes from the latest saved registry snapshot. Registry-change detection compares the two most recently captured distinct versions in the database. With insufficient history, the result is unknown.
+
+Each captured registry snapshot has a content hash and capture date, allowing findings to be traced to the record used for analysis.
+
+**Not identified** in v1 means supporting reporting was not identified in the available abstract text. Full-paper text analysis belongs to v3. Findings describe evidence and differences for human review. Sponsor summaries describe the ingested corpus, and missing data retain an explicit unknown state.
+
+## Run locally
+
+Requires **Python 3.12 or newer**, PostgreSQL, and an OpenAI API key for model-based matching. An optional NCBI key increases PubMed request capacity.
 
 ```bash
-pip install -e ".[dev]"
+pip install -e ".[dev,dashboard]"
 ```
 
-Put your settings in a `.env` file in this folder (never commit it):
+Create a `.env` file at the project root.
 
-```
+```dotenv
 TRIALTRACE_DATABASE_URL=postgresql://user:password@localhost:5432/trialtrace
-OPENAI_API_KEY=...            # only needed for match-papers and the LLM evaluation
-NCBI_API_KEY=...              # optional: allows more PubMed requests per second
+OPENAI_API_KEY=your_openai_key
+# Optional
+NCBI_API_KEY=your_ncbi_key
+# Local development
+TRIALTRACE_DISABLE_LOGIN=1
 ```
+
+Start PostgreSQL with a database matching that connection string, then run the workflow.
 
 ```bash
-python -m trialtrace.db.migrate                          # create or update the tables
-python -m trialtrace ingest NCT04644237                  # download and store a trial
-python -m trialtrace ingest-papers NCT04644237           # find and store its PubMed papers
-python -m trialtrace match-papers NCT04644237            # LLM on every outcome and paper (calls the model API; --with-baseline adds the code reader)
-python -m trialtrace read-safety NCT04644237             # LLM reads the safety statements in the abstracts (calls the model API)
-python -m trialtrace report                              # build a report, saved as a run and as outputs/reports/<run>.md
-python -m trialtrace review --reviewer "Your Name"       # decide on findings, highest priority first
-streamlit run dashboard/app.py                           # the dashboard: enter an NCT ID, review findings
+python -m trialtrace.db.migrate
+python -m trialtrace ingest NCT04644237
+python -m trialtrace ingest-papers NCT04644237
+python -m trialtrace match-papers NCT04644237
+python -m trialtrace report
+streamlit run dashboard/app.py
 ```
 
-`match-papers` reuses a stored model answer whenever the same outcome, abstract, model and prompt were answered before
-(`--refresh` asks again), and prints how many model calls it made. Tests need the database but never the network or an
-API key, and run in their own `trialtrace_test` database:
+`match-papers` makes paid model calls for uncached pairs. Add `--with-baseline` to store a rules-based comparison, or `--refresh` to request new answers. Review findings through the command line with the following command.
+
+```bash
+python -m trialtrace review --reviewer "Your Name"
+```
+
+### Sign-in
+
+For Google sign-in, set `TRIALTRACE_ALLOWED_EMAILS` to a comma-separated allowlist, copy `.streamlit/secrets.toml.example` to `.streamlit/secrets.toml`, and configure Google OAuth credentials. Set `TRIALTRACE_DISABLE_LOGIN=0` to enable authentication. An empty allowlist blocks access when authentication is enabled.
+
+Keep `.env` and `.streamlit/secrets.toml` out of version control. See the [Google Cloud deployment guide](docs/DEPLOY_GCP.md) for hosted configuration.
+
+### Docker and the optional API
+
+```bash
+docker compose up --build
+```
+
+Compose starts PostgreSQL, the API at `http://localhost:8000`, and the dashboard at `http://localhost:8501`. Supply the environment and login configuration described above.
+
+To run the API separately, install its extra and start Uvicorn.
+
+```bash
+pip install -e ".[api]"
+uvicorn trialtrace.api:app --port 8000
+```
+
+API documentation is available at `http://localhost:8000/docs`. The service supports inspecting stored trials and findings, estimating matching calls, submitting reviews, and exporting findings. Model execution is initiated through the CLI or dashboard.
+
+### Tests
 
 ```bash
 python -m pytest
 ```
 
-## API, Docker and the demo
+Database tests use a separate `trialtrace_test` database and roll back test transactions. The PostgreSQL account needs permission to create that database on the first run. Tests use mocked external services. The GitHub Actions workflow defines PostgreSQL-backed tests and a Docker image build.
 
-```bash
-pip install -e ".[api,dashboard]"
-uvicorn trialtrace.api:app --port 8000      # docs at http://localhost:8000/docs
-docker compose up --build                   # Postgres + API (8000) + dashboard (8501)
+## Repository layout
+
+```text
+trialtrace/
+  sources/          Registry and PubMed clients, raw-source storage
+  parse/            Registry, posted-result, and paper parsers
+  checks/           Results status, timelines, links, sponsor counts, patterns
+  compare/          Registry differences and outcome-paper evidence matching
+  safety/           v2 safety modules and safety migrations
+  db/               PostgreSQL repository and core migrations
+  review/           Review queues, decisions, highlighting, exports
+  match_papers.py   v1 outcome-abstract matching, answer reuse, call estimates
+  report.py         Findings and report generation
+  api.py            Optional FastAPI service
+  cli.py            Command-line entry points
+dashboard/          Streamlit interface
+evals/              Evaluation tools, local datasets and run records
+tests/              Automated tests
+docs/               Workflows, deployment, and design decisions
 ```
 
-The API shows what is stored and takes human reviews; it never calls the model. The dashboard does not use the API: it talks to Postgres directly, so the API is optional. The Docker images build and `docker compose up --build` starts Postgres, the API and the dashboard (tested 2026-11-15, starting with an empty database). The CI workflow (`.github/workflows/ci.yml`) is written but has not run yet. A script for an 8-minute demo is in [docs/DEMO.md](docs/DEMO.md).
-
-## Login and Google Cloud
-
-The dashboard has Google sign-in with an email allowlist. Put `TRIALTRACE_ALLOWED_EMAILS=a@example.com,b@example.com` in `.env`, copy `.streamlit/secrets.toml.example` to `.streamlit/secrets.toml` and fill in your Google OAuth client. With no allowed emails nobody gets in. `TRIALTRACE_DISABLE_LOGIN=1` turns login off, for your own computer only. Needs `pip install Authlib` (the `dashboard` extra has it).
-
-The dashboard is deployed on Google Cloud Run with its database on Cloud SQL. Steps, problems and costs: [docs/DEPLOY_GCP.md](docs/DEPLOY_GCP.md).
-
-## Evaluation
-
-The LLM reader was compared with the rules baseline on frozen, labelled cases in three rounds, with labels fixed before
-running and results reported even where the predefined rule was not met. Cases, rubrics, freeze records and run outputs are
-in `evals/` (`rubric.md`, `v2/`, `v3/`, `v4/`, `runs/`). The numbers and their caveats are in
-[docs/DESIGN_DECISIONS.md](docs/DESIGN_DECISIONS.md) (D26b to D26r). The sets are small and the labels were drafted by a
-model and reviewed by one person, so treat the results as a first experiment.
-
-**Trial-with-several-papers evaluation (D42).** Final frozen run: 19 trials, 72 registered outcomes, 204 labelled pairs (labels drafted by a model; 30 pairs re-labelled blind by a person: 27/30 agree, kappa 0.85, the 3 misses corrected). At outcome level the LLM was right on 22 of its 26 "reported" claims (85%, 95% CI 66-94%) and found 22 of the 26 truly reported outcomes (85%); the baseline found 8 of 26 (31%). The LLM's quote was the right sentence 20/24 times (baseline 3/9). No invalid quotes or failed reads. All 4 LLM overclaims were sent to review (0 missed). Limits: abstracts only, 19 trials, 30 of 204 pairs human-checked; 20 of 34 "not identified" outcomes human-checked (0 missed).
-
-**Safety evaluation (D56).** One frozen run on 53 trials / 154 abstracts (57 labelled statements; labels drafted by a
-model, a blind second AI annotation reviewed by one person, adjudicated before the run): the LLM found 44 of 57 statements
-(77%) and 44 of its 52 statements matched a label (85%); the comparison category was right for 27 of 57 (47%). No real
-case of agreeing or differing numbers existed in the sample, so that part is untested; a separate set of 10 constructed
-abstracts scored 17 of 18. This does not validate the safety comparison. Details: `evals/safety/report.md`.
-
-**Safety rounds (D56 to D83).** Six rounds (v2 to v6) were run; none met its targets. The last, v6, ran once on unseen trials (123 abstracts, 54 trials, 61 labelled statements): the LLM found 43 (70%) and 43 of its 50 statements were right (86%); 0 verified numeric comparisons and 0 of 3 window assertions supported. Labels were prepared by a language model and reviewed and adopted by one person. Safety is parked ([D86](docs/DESIGN_DECISIONS.md), [SAFETY_V6_RESULTS.md](docs/SAFETY_V6_RESULTS.md)).
-
-**Multi-paper cross-check (D84, 2026-11-13).** 12 new trials (a 13th was already in the D42 set, D91), one fresh run: nothing broke (0 failures, 0 bad quotes); at outcome level the LLM found 22 of 22 labelled-reported outcomes and 22 of its 27 claims were right (81%); all 5 overclaims went to review. Labels drafted by one AI and not human-verified, so this is a development check, not a validation. After a prompt fix aimed at those overclaims (D89), wrong identified outcomes fell from 9 to 2 on the development pairs and recall from 92% to 85%; a fresh unseen validation (19 trials, 71 outcomes, one run, D93) then gave precision 20/22 (91%) and recall 20/25 (80%) with 0 bad quotes and 42% of outcomes called unclear: the pre-registered targets (90% and 80%) are met only on the point estimates, with wide ranges, and the labels are AI-drafted (a 50-pair subset was reviewed and adopted by Venu and agrees on 40 of 50; the other 154 pairs are unreviewed) ([VALIDATION_V1_RESULTS.md](docs/VALIDATION_V1_RESULTS.md)).
-
-**Challenge set (D101, 2026-11-13).** 10 trials chosen on purpose for four known failure modes (wrong-trial or pooled results, subgroups, different time points, bare no-difference), 43 outcomes, one run, scored on its own: 9 of 11 identified outcomes right; no wrong identified on wrong-trial, time-point or bare-statement pairs; 2 on subgroup pairs from one paper. It tests specific weaknesses and cannot show general accuracy; labels are AI-drafted with a 50-pair Venu-reviewed subset ([CHALLENGE_V1_RESULTS.md](docs/CHALLENGE_V1_RESULTS.md)).
-
-**Assisted review of unclear findings (D103).** The 56 findings the model called unclear in the validation run were reviewed by an AI reviewer with the model's answer visible: 19 were settled (4 identified, 15 not identified) and 37 stay unclear (mostly generic statements and different time points). It is not a human review, not independent, and not an accuracy test; AI reviews never count as Human-verified in the dashboard, and a person's review of the same 56 is still open.
-
-## Where to read more
-
-Every document is grouped by topic in [docs/README.md](docs/README.md).
-
-| File | What it holds |
-|---|---|
-| [docs/PROBLEM_AND_POSITIONING.md](docs/PROBLEM_AND_POSITIONING.md) | the documented problem, what this is, limits |
-| [docs/HOW_IT_WORKS.md](docs/HOW_IT_WORKS.md) | a real trial followed through the pipeline |
-| [docs/WORKFLOWS.md](docs/WORKFLOWS.md) | the data-flow diagrams, including deployment |
-| [docs/SYSTEM_DESIGN.md](docs/SYSTEM_DESIGN.md) | the system design, for interviews |
-| [docs/DESIGN_DECISIONS.md](docs/DESIGN_DECISIONS.md) | every design decision, with the problem, the choice and the trade-off |
-| [docs/INTERVIEW_GUIDE.md](docs/INTERVIEW_GUIDE.md) | the project story, honest limits and likely questions |
-| [docs/SAFETY_PLAN.md](docs/SAFETY_PLAN.md) | the safety (side effects) work: plan, steps, rules |
-| [docs/SAFETY_IMPROVEMENTS.md](docs/SAFETY_IMPROVEMENTS.md) | what changed after the first safety evaluation |
-| [docs/LLM_IMPROVEMENT_ITERATION.md](docs/LLM_IMPROVEMENT_ITERATION.md) | the current state of the readers and the next evaluation |
-| [docs/SAFETY_V6_RESULTS.md](docs/SAFETY_V6_RESULTS.md) | the last safety run and the audit of its misses |
-| [docs/DEMO.md](docs/DEMO.md) | an 8-minute demo script |
-| [docs/DEPLOY_GCP.md](docs/DEPLOY_GCP.md) | how the dashboard is deployed to Google Cloud, and what went wrong |
-| [evals/README.md](evals/README.md) | every evaluation set, its status and how it may be used |
-| [PLAN.md](PLAN.md) | the plan, the progress table and what comes next |
-
-## Layout
-
-```
-dashboard/    Streamlit page (app.py)
-trialtrace/   sources/ parse/ checks/ compare/ db/ review/ safety/ report.py ingest_*.py match_papers.py llm.py paper_reader.py cli.py
-evals/        rubrics, labelled cases, frozen sets (v2 to v4, final, safety, safety_v2), run outputs, scoring and labelling tools
-tests/        pytest suite
-docs/         design, workflows, positioning, interview guide
-```
+The dashboard is deployed using Google Cloud Run and Cloud SQL. The [deployment guide](docs/DEPLOY_GCP.md) describes its configuration, and [workflow diagrams](docs/WORKFLOWS.md) expand on the data flow.
