@@ -1,14 +1,31 @@
-# TrialTrace
+<div align="center">
 
-### Clinical Trial Evidence Intelligence Platform
+# TrialTrace: Clinical Trial Evidence Intelligence Platform
+
+Evidence-grounded review of clinical-trial reporting: registry checks, an LLM abstract reader with code-verified quotes, source evidence for every finding, and human review with an audit history. Deployed on Google Cloud with Google sign-in.
+
+![Python](https://img.shields.io/badge/python-3.12-blue)
+![Streamlit](https://img.shields.io/badge/Streamlit-dashboard-FF4B4B)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-structured_data-4169E1)
+![OpenAI](https://img.shields.io/badge/OpenAI-abstract_reader-412991)
+![ClinicalTrials.gov](https://img.shields.io/badge/ClinicalTrials.gov-registry_source-0B5394)
+![PubMed](https://img.shields.io/badge/PubMed-paper_source-326599)
+![Human review](https://img.shields.io/badge/Human_review-audit_history-7A1FA2)
+![Docker](https://img.shields.io/badge/Docker-containerized-2496ED)
+![Cloud Run](https://img.shields.io/badge/Google_Cloud_Run-deployed-4285F4)
+![Cloud SQL](https://img.shields.io/badge/Cloud_SQL-PostgreSQL_16-4285F4)
+![Auth](https://img.shields.io/badge/Google_sign--in-email_allowlist-34A853)
+[![CI](https://github.com/vthottempudi1/TrialTrace/actions/workflows/ci.yml/badge.svg)](https://github.com/vthottempudi1/TrialTrace/actions/workflows/ci.yml)
+
+**Registry Checks + LLM Abstract Reader + Quote Validation + Human Review + CI/CD to Cloud Run**
+
+[Open the dashboard](https://trialtrace-dashboard-1061960202985.us-central1.run.app) (Google sign-in with an allowlisted email)
+
+</div>
 
 TrialTrace helps reviewers trace clinical-trial reporting back to its sources. It brings together ClinicalTrials.gov records and linked PubMed abstracts, checks whether registered outcomes are reported, and presents findings with supporting evidence and a review history.
 
 The project combines deterministic registry checks, an LLM abstract reader, evidence validation, and human review in a Streamlit dashboard.
-
-[Open the dashboard](https://trialtrace-dashboard-1061960202985.us-central1.run.app)
-
-The hosted dashboard requires Google sign-in with an allowlisted email.
 
 ## Project versions
 
@@ -179,7 +196,7 @@ API documentation is available at `http://localhost:8000/docs`. The service supp
 python -m pytest
 ```
 
-Database tests use a separate `trialtrace_test` database and roll back test transactions. The PostgreSQL account needs permission to create that database on the first run. Tests use mocked external services. The GitHub Actions workflow defines PostgreSQL-backed tests and a Docker image build.
+Database tests use a separate `trialtrace_test` database and roll back test transactions. The PostgreSQL account needs permission to create that database on the first run. Tests use mocked external services. The GitHub Actions workflow runs PostgreSQL-backed tests and a Docker image build on every push.
 
 ## Repository layout
 
@@ -202,4 +219,4 @@ tests/              Automated tests
 docs/               Workflows, deployment, and design decisions
 ```
 
-The dashboard is deployed using Google Cloud Run and Cloud SQL. The [deployment guide](docs/DEPLOY_GCP.md) describes its configuration, and [workflow diagrams](docs/WORKFLOWS.md) expand on the data flow.
+The dashboard is deployed using Google Cloud Run and Cloud SQL. **CI/CD:** every push to `main` runs the tests (`ci.yml`); when they pass, `deploy.yml` builds the Docker image, pushes it to Artifact Registry and updates the Cloud Run service. GitHub signs in to Google with Workload Identity Federation, so no key file is stored. The [deployment guide](docs/DEPLOY_GCP.md) describes its configuration, and [workflow diagrams](docs/WORKFLOWS.md) expand on the data flow.
