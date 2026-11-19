@@ -1,0 +1,17 @@
+# Build upload rules for gcloud builds submit. Without this file gcloud follows .gitignore, which hides trialtrace/safety
+# (the code imports it, so the image would crash). Keep this list in step with .dockerignore.
+.git
+.gitignore
+.env
+.streamlit/secrets.toml
+data/
+outputs/
+tests/
+docs/
+__pycache__/
+*.pyc
+.pytest_cache/
+evals/*
+!evals/validation_v1
+evals/validation_v1/*
+!evals/validation_v1/assisted_review

@@ -1,0 +1,14 @@
+data/
+outputs/
+evals/
+!evals/validation_v1/
+evals/validation_v1/*
+!evals/validation_v1/assisted_review/
+tests/
+docs/
+__pycache__/
+**/__pycache__/
+*.pyc
+.env
+.pytest_cache/
+.streamlit/secrets.toml

@@ -1,0 +1,27 @@
+# Secrets and local data never go to Git
+.env
+data/
+outputs/
+__pycache__/
+.pytest_cache/
+
+.streamlit/secrets.toml
+.venv/
+*.egg-info/
+.DS_Store
+
+# Kept local only (not pushed)
+PLAN.md
+docs/*
+!docs/WORKFLOWS.md
+!docs/DEPLOY_GCP.md
+!docs/DESIGN_DECISIONS.md
+
+# evals: push the Python code (tests import it) and the one folder Docker copies; keep data folders local
+evals/*/
+!evals/validation_v1/
+evals/validation_v1/*
+!evals/validation_v1/assisted_review/
+
+# Safety work deferred pending evaluation metrics
+# /trialtrace/safety/

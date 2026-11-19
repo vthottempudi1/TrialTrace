@@ -1,0 +1,30 @@
+NCT01475838:m01-24908551 | yes | primary | 11 | 93.8% vs 87.1% <50 copies/mL at week 48; called primary in s6
+NCT01346709:m01-30431500 | unclear | | | narrower: only postoperative pneumonia (s9), one component of the PPC composite
+NCT00602212:m02-20543266 | no | | | diary/subjective measures not mentioned
+NCT04934020:m01-35677980 | unclear | | | narrower: CVT volume and mortality trends only
+NCT01010841:m02-21481713 | unclear | | | narrower: baseline TG only (s3)
+NCT00044655:m02-21536693 | unclear | | | s8 groups did not differ in hospitalizations; no number or test
+NCT01010841:m02-21944261 | no | | | lipoprotein subfractions only
+NCT04934020:m04-35677980 | no | | | CVT paper; SAH not mentioned
+NCT03271918:m02-30540568 | yes | not_stated | 9 | stabilization 66.1% vs 73.7%
+NCT02603120:m04-39993074 | no | | | BMD not mentioned
+NCT00987077:m01-40522203 | unclear | | | pooled network meta-analysis
+NCT01010841:m02-21600524 | yes | not_stated | 6 | TG decreased (P < .001)
+NCT01010841:m02-22024489 | unclear | | | narrower: 25-woman subset
+NCT03419325:m04-39242160 | no | | | bleeding named, no result
+NCT01506024:m02-30421633 | yes | not_stated | 9 | HOOS-PS p = 0.02
+NCT01010841:m06-21481713 | no | | | only waist circumference
+NCT01010841:m03-21600524 | no | | | not mentioned
+NCT01475838:m01-28555519 | unclear | | | different time point: week 96
+NCT01506024:m01-26141371 | yes | not_stated | 8,9 | 3 months between-group differences
+NCT03566667:m02-42701865 | yes | not_stated | 7 | death HR 0.92
+NCT04934020:m06-35677980 | yes | not_stated | 13 | 26 VITT cases, six deaths
+NCT01475838:m03-24908551 | no | | | CD4 not mentioned
+NCT03653689:m01-38347192 | no | | | IBS-SSS only as modelling target
+NCT01346709:m01-26020123 | unclear | | | narrower: respiratory failure only
+NCT04934020:m03-35902229 | yes | not_stated | 8 | -5% (p=0.06)
+NCT00987077:m01-20554506 | yes | primary | 6 | BCVA 12.7 vs 6.3 letters (p=0.04)
+NCT03540823:m02-38017564 | yes | not_stated | 12,13 | AE 58.3% vs 44.8%
+NCT01741714:m06-26145718 | no | | | x-ray not mentioned
+NCT02603120:m02-29925489 | no | | | different measure (>=50)
+NCT00044655:m02-22480442 | unclear | | | s6 no number or test

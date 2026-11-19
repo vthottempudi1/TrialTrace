@@ -1,0 +1,55 @@
+{
+  "AI reviewer(s)": {
+    "frozen_findings": 56,
+    "reviewed": 56,
+    "not_yet_reviewed": 0,
+    "outcomes": {
+      "identified": 4,
+      "not_identified": 15,
+      "still_unclear": 37,
+      "unable": 0,
+      "pending": 0
+    },
+    "settled": 19,
+    "share_settled_of_reviewed": 0.3392857142857143,
+    "share_still_unclear_or_unable_of_reviewed": 0.6607142857142857,
+    "reasons_unclear": {
+      "generic_statement": 18,
+      "different_time_point": 8,
+      "different_measure": 5,
+      "subgroup_or_partial": 4,
+      "predictor_only": 1,
+      "different_analysis_population": 1
+    },
+    "seconds_median": null,
+    "seconds_mean": null,
+    "seconds_total": 0,
+    "findings_over_limit": 0,
+    "limit_seconds": 600,
+    "seconds_median_by_outcome": {},
+    "evidence_missing_where_required": 0
+  },
+  "Human reviewer(s)": {
+    "frozen_findings": 56,
+    "reviewed": 0,
+    "not_yet_reviewed": 56,
+    "outcomes": {
+      "identified": 0,
+      "not_identified": 0,
+      "still_unclear": 0,
+      "unable": 0,
+      "pending": 0
+    },
+    "settled": 0,
+    "share_settled_of_reviewed": null,
+    "share_still_unclear_or_unable_of_reviewed": null,
+    "reasons_unclear": {},
+    "seconds_median": null,
+    "seconds_mean": null,
+    "seconds_total": 0,
+    "findings_over_limit": 0,
+    "limit_seconds": 600,
+    "seconds_median_by_outcome": {},
+    "evidence_missing_where_required": 0
+  }
+}

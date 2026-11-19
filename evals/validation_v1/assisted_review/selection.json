@@ -1,0 +1,512 @@
+{
+  "frozen_at": "2026-11-13T19:46:59+00:00",
+  "rule": "all pairs the model called unclear (status ambiguous) in the validation v1 run, ordered by sha256('assisted-review' + match_id)",
+  "reviews_in_database_before_freeze": 0,
+  "count": 56,
+  "findings": [
+    {
+      "match_id": 1687,
+      "nct_id": "NCT03746457",
+      "outcome_role": "secondary",
+      "outcome_position": 1,
+      "pmid": "34014429",
+      "input_hash": "110c7557cd8d75f67ca8a163ac64134e60193e34b266443c3e359d47129a744f",
+      "match_run_id": "match-20261113T191413Z"
+    },
+    {
+      "match_id": 1523,
+      "nct_id": "NCT03564301",
+      "outcome_role": "secondary",
+      "outcome_position": 1,
+      "pmid": "39093380",
+      "input_hash": "f8e41ea6c6057647613b91a00b454acf0bc37bdd54198a541e3ee110da06a182",
+      "match_run_id": "match-20261113T191413Z"
+    },
+    {
+      "match_id": 1535,
+      "nct_id": "NCT00536185",
+      "outcome_role": "secondary",
+      "outcome_position": 0,
+      "pmid": "42141771",
+      "input_hash": "e1cb5403057c7622f6b1fe2924f8b70a0d7ea82e3dea0600d1bd8709d1a8e86b",
+      "match_run_id": "match-20261113T191413Z"
+    },
+    {
+      "match_id": 1674,
+      "nct_id": "NCT04193189",
+      "outcome_role": "other",
+      "outcome_position": 1,
+      "pmid": "39616603",
+      "input_hash": "16737238b7bb363ed58a7d1b19249a93cf6da5f9b1f65f2adca4781629391f5b",
+      "match_run_id": "match-20261113T191413Z"
+    },
+    {
+      "match_id": 1570,
+      "nct_id": "NCT02466126",
+      "outcome_role": "secondary",
+      "outcome_position": 1,
+      "pmid": "34156589",
+      "input_hash": "4a3a6a2f3a80bf61f945c9253934ab6d72e9d21f86b49fbdf253fedd702e4844",
+      "match_run_id": "match-20261113T191413Z"
+    },
+    {
+      "match_id": 1533,
+      "nct_id": "NCT00536185",
+      "outcome_role": "secondary",
+      "outcome_position": 0,
+      "pmid": "24259553",
+      "input_hash": "1e4bae20a7bd58a31024da2f18ced8a223b14dba643a3e2c9eb6ea87666ed26c",
+      "match_run_id": "match-20261113T191413Z"
+    },
+    {
+      "match_id": 1672,
+      "nct_id": "NCT04193189",
+      "outcome_role": "secondary",
+      "outcome_position": 2,
+      "pmid": "39616603",
+      "input_hash": "1234f8d4d814e75d06ed05ad397a27226b144fde5b942aa2833dbc5001f08e5a",
+      "match_run_id": "match-20261113T191413Z"
+    },
+    {
+      "match_id": 1514,
+      "nct_id": "NCT03564301",
+      "outcome_role": "primary",
+      "outcome_position": 0,
+      "pmid": "34713471",
+      "input_hash": "ac460c86d1737becca3569635b252cc83c0aef9681ce796823e05a916b1b6625",
+      "match_run_id": "match-20261113T191413Z"
+    },
+    {
+      "match_id": 1525,
+      "nct_id": "NCT03564301",
+      "outcome_role": "secondary",
+      "outcome_position": 3,
+      "pmid": "39093380",
+      "input_hash": "84b49901a384b7d8b8bf9a2b8078375bb7419b6e2932a4302810744ebba31caf",
+      "match_run_id": "match-20261113T191413Z"
+    },
+    {
+      "match_id": 1511,
+      "nct_id": "NCT00940394",
+      "outcome_role": "primary",
+      "outcome_position": 0,
+      "pmid": "30618880",
+      "input_hash": "b5439a06bcab32d4bd6526c11d7fb69b4329e53a14c19980af85a48c522c4f55",
+      "match_run_id": "match-20261113T191413Z"
+    },
+    {
+      "match_id": 1646,
+      "nct_id": "NCT02058420",
+      "outcome_role": "other",
+      "outcome_position": 0,
+      "pmid": "29330573",
+      "input_hash": "eece9b79e488678057e59fb62a77fc5a16fca4fbb98109343e8f91640fceec05",
+      "match_run_id": "match-20261113T191413Z"
+    },
+    {
+      "match_id": 1653,
+      "nct_id": "NCT02058420",
+      "outcome_role": "other",
+      "outcome_position": 1,
+      "pmid": "29954374",
+      "input_hash": "ff65711ac775b1f3d4b126d2fa72cc843c0891819f35d520da46de9299d71adb",
+      "match_run_id": "match-20261113T191413Z"
+    },
+    {
+      "match_id": 1575,
+      "nct_id": "NCT02466126",
+      "outcome_role": "secondary",
+      "outcome_position": 0,
+      "pmid": "38861659",
+      "input_hash": "578eb40bdff6bedb5e6e9e68ef4e8e6646b1ddab2170ad4f253424fae83dddfa",
+      "match_run_id": "match-20261113T191413Z"
+    },
+    {
+      "match_id": 1686,
+      "nct_id": "NCT03746457",
+      "outcome_role": "secondary",
+      "outcome_position": 0,
+      "pmid": "34014429",
+      "input_hash": "6d9ac9636779adc723a3957830446cfcbfaa27888e9d8a10c33ea1073ac77a27",
+      "match_run_id": "match-20261113T191413Z"
+    },
+    {
+      "match_id": 1616,
+      "nct_id": "NCT00681213",
+      "outcome_role": "primary",
+      "outcome_position": 0,
+      "pmid": "21981661",
+      "input_hash": "bd2529ec15ee79df20c5d851505be1b3e0d43857be90e2434ec134f8cc6a7086",
+      "match_run_id": "match-20261113T191413Z"
+    },
+    {
+      "match_id": 1521,
+      "nct_id": "NCT03564301",
+      "outcome_role": "primary",
+      "outcome_position": 0,
+      "pmid": "39093380",
+      "input_hash": "e70f0807d72c9ef69ec84b7cb9c5aeee6e568e2f5c26ae53daa104ecd46445d4",
+      "match_run_id": "match-20261113T191413Z"
+    },
+    {
+      "match_id": 1569,
+      "nct_id": "NCT02466126",
+      "outcome_role": "secondary",
+      "outcome_position": 0,
+      "pmid": "34156589",
+      "input_hash": "50a750a592f50db4cd796d2373cb76b5c93c4b61e1c59df8e9fe4688756c39c3",
+      "match_run_id": "match-20261113T191413Z"
+    },
+    {
+      "match_id": 1516,
+      "nct_id": "NCT03564301",
+      "outcome_role": "secondary",
+      "outcome_position": 1,
+      "pmid": "34713471",
+      "input_hash": "b61b67c84f1c66a11709e45e1a88cc897f58c7cce3eb1de3ba5a95e3c750b41a",
+      "match_run_id": "match-20261113T191413Z"
+    },
+    {
+      "match_id": 1547,
+      "nct_id": "NCT00678418",
+      "outcome_role": "secondary",
+      "outcome_position": 0,
+      "pmid": "23701526",
+      "input_hash": "85b7312f0dcbdd7f1cf246f7794049817608bf843c9650152eecb96f1c58ab42",
+      "match_run_id": "match-20261113T191413Z"
+    },
+    {
+      "match_id": 1546,
+      "nct_id": "NCT00678418",
+      "outcome_role": "primary",
+      "outcome_position": 0,
+      "pmid": "23701526",
+      "input_hash": "5ab7d268068d6ac183dcffcc700668cc962d9c60a877028161d862c3ff35f953",
+      "match_run_id": "match-20261113T191413Z"
+    },
+    {
+      "match_id": 1568,
+      "nct_id": "NCT02466126",
+      "outcome_role": "primary",
+      "outcome_position": 0,
+      "pmid": "34156589",
+      "input_hash": "1ee8be571cfb79011ff00b4fc84ceb224558b3d19749c07f744bfab9d1134e70",
+      "match_run_id": "match-20261113T191413Z"
+    },
+    {
+      "match_id": 1580,
+      "nct_id": "NCT00262054",
+      "outcome_role": "primary",
+      "outcome_position": 0,
+      "pmid": "20150324",
+      "input_hash": "485986ae1190fa2f74e0215896ed6905cae1e4e21e3cb37eb4866dbc88ee98ed",
+      "match_run_id": "match-20261113T191413Z"
+    },
+    {
+      "match_id": 1581,
+      "nct_id": "NCT00262054",
+      "outcome_role": "secondary",
+      "outcome_position": 0,
+      "pmid": "20150324",
+      "input_hash": "5a53a032c145267056503aa0204ddb41d7118179eff134ac48d0953f214c1859",
+      "match_run_id": "match-20261113T191413Z"
+    },
+    {
+      "match_id": 1508,
+      "nct_id": "NCT00940394",
+      "outcome_role": "primary",
+      "outcome_position": 0,
+      "pmid": "23433723",
+      "input_hash": "971e73804897e62dff11b461b77665f724a09e99cf9bafb7ff848692cf183017",
+      "match_run_id": "match-20261113T191413Z"
+    },
+    {
+      "match_id": 1590,
+      "nct_id": "NCT01195623",
+      "outcome_role": "secondary",
+      "outcome_position": 0,
+      "pmid": "31992538",
+      "input_hash": "c6c404ea944c2b63abdaffd88d08b77f1fd9bb277774d288eca2c73dc458a60e",
+      "match_run_id": "match-20261113T191413Z"
+    },
+    {
+      "match_id": 1685,
+      "nct_id": "NCT03746457",
+      "outcome_role": "primary",
+      "outcome_position": 3,
+      "pmid": "34014429",
+      "input_hash": "881c765ae3e3a91ccbd32f765b73f0d19fef81a14adb503102da3721dd44ca0a",
+      "match_run_id": "match-20261113T191413Z"
+    },
+    {
+      "match_id": 1532,
+      "nct_id": "NCT00536185",
+      "outcome_role": "primary",
+      "outcome_position": 0,
+      "pmid": "24259553",
+      "input_hash": "de90db0e2d2c4503dc47d2f3be56018cb175e95e25945068f975bdc16d2ad878",
+      "match_run_id": "match-20261113T191413Z"
+    },
+    {
+      "match_id": 1522,
+      "nct_id": "NCT03564301",
+      "outcome_role": "secondary",
+      "outcome_position": 0,
+      "pmid": "39093380",
+      "input_hash": "0eed743b8d82be51cea260622b2c0f0ed77e91804798d6f0a0d3d6510e9e819e",
+      "match_run_id": "match-20261113T191413Z"
+    },
+    {
+      "match_id": 1519,
+      "nct_id": "NCT03564301",
+      "outcome_role": "secondary",
+      "outcome_position": 4,
+      "pmid": "34713471",
+      "input_hash": "d228e11de5cfee2b5155ae17b07acfeac32d526abd4bc97c8e2a617863f96bc0",
+      "match_run_id": "match-20261113T191413Z"
+    },
+    {
+      "match_id": 1603,
+      "nct_id": "NCT04343261",
+      "outcome_role": "primary",
+      "outcome_position": 0,
+      "pmid": "37162745",
+      "input_hash": "e410a2e3b996adccc7a0a5ab614f0fbe96cb578fecc1adf7f0080081413ffa14",
+      "match_run_id": "match-20261113T191413Z"
+    },
+    {
+      "match_id": 1655,
+      "nct_id": "NCT02058420",
+      "outcome_role": "other",
+      "outcome_position": 3,
+      "pmid": "29954374",
+      "input_hash": "e43f1c883f1cc1021a7bbe479e9b9f2d862ffc09b9f51b3ae911faf37fc28436",
+      "match_run_id": "match-20261113T191413Z"
+    },
+    {
+      "match_id": 1684,
+      "nct_id": "NCT03746457",
+      "outcome_role": "primary",
+      "outcome_position": 2,
+      "pmid": "34014429",
+      "input_hash": "2eb5cd367e5bd9f7a00303ace61ca3cdb7ae10d178111519f314e47a36e5fa97",
+      "match_run_id": "match-20261113T191413Z"
+    },
+    {
+      "match_id": 1518,
+      "nct_id": "NCT03564301",
+      "outcome_role": "secondary",
+      "outcome_position": 3,
+      "pmid": "34713471",
+      "input_hash": "12fe4ef720d6ff05996d07193d5929d1aa8123ae30cddfd1eb1fdb0cd6dfbabc",
+      "match_run_id": "match-20261113T191413Z"
+    },
+    {
+      "match_id": 1531,
+      "nct_id": "NCT00536185",
+      "outcome_role": "secondary",
+      "outcome_position": 0,
+      "pmid": "22739369",
+      "input_hash": "0f6c65aa31afe63abc70dce1012f0db3ddfdf5d6a4ce2085d29efb6686de171c",
+      "match_run_id": "match-20261113T191413Z"
+    },
+    {
+      "match_id": 1574,
+      "nct_id": "NCT02466126",
+      "outcome_role": "primary",
+      "outcome_position": 0,
+      "pmid": "38861659",
+      "input_hash": "70b1ba78eedc7fed2d861461fde172997801f0583efeef4bda95867cec6b5557",
+      "match_run_id": "match-20261113T191413Z"
+    },
+    {
+      "match_id": 1669,
+      "nct_id": "NCT04193189",
+      "outcome_role": "primary",
+      "outcome_position": 1,
+      "pmid": "39616603",
+      "input_hash": "018f32f858e714c7bacb77aa57596fa4a01b886349627dba52448939803414a2",
+      "match_run_id": "match-20261113T191413Z"
+    },
+    {
+      "match_id": 1576,
+      "nct_id": "NCT02466126",
+      "outcome_role": "secondary",
+      "outcome_position": 1,
+      "pmid": "38861659",
+      "input_hash": "f72b3c1b999a38ebc27b2876db5b3e9d6ad9c25b3eeb2d8b4de5097374949ef9",
+      "match_run_id": "match-20261113T191413Z"
+    },
+    {
+      "match_id": 1588,
+      "nct_id": "NCT01195623",
+      "outcome_role": "secondary",
+      "outcome_position": 0,
+      "pmid": "21618499",
+      "input_hash": "83f6306dd7a201b4e8dfe4a658cc7438ee6764b3d739813fd44e31ba2e350601",
+      "match_run_id": "match-20261113T191413Z"
+    },
+    {
+      "match_id": 1510,
+      "nct_id": "NCT00940394",
+      "outcome_role": "secondary",
+      "outcome_position": 1,
+      "pmid": "23433723",
+      "input_hash": "8fcc0fd40edd653623036625d84c43f5eca872e71c24fd2e294cfee37b748b51",
+      "match_run_id": "match-20261113T191413Z"
+    },
+    {
+      "match_id": 1617,
+      "nct_id": "NCT00681213",
+      "outcome_role": "secondary",
+      "outcome_position": 0,
+      "pmid": "21981661",
+      "input_hash": "e41817c3e3f0806ca4045aad3f3bc9159ed355ed712eff88766d4b10e230fcec",
+      "match_run_id": "match-20261113T191413Z"
+    },
+    {
+      "match_id": 1645,
+      "nct_id": "NCT02058420",
+      "outcome_role": "secondary",
+      "outcome_position": 0,
+      "pmid": "29330573",
+      "input_hash": "0d9d4fbfce5101b2bfed469ab41261c484d9971e37f29c455f78e32769c9e1ad",
+      "match_run_id": "match-20261113T191413Z"
+    },
+    {
+      "match_id": 1542,
+      "nct_id": "NCT00678418",
+      "outcome_role": "secondary",
+      "outcome_position": 0,
+      "pmid": "22945623",
+      "input_hash": "5ddee1f0aa0853376c96c5651b984fcbc3e8568e8fed4323a9aa24e90ae51e27",
+      "match_run_id": "match-20261113T191413Z"
+    },
+    {
+      "match_id": 1644,
+      "nct_id": "NCT02058420",
+      "outcome_role": "primary",
+      "outcome_position": 0,
+      "pmid": "29330573",
+      "input_hash": "fd10401ac7aa3065d0c73940a157e64e22205c3afdbeb1502aa5fa6d7c69f0ba",
+      "match_run_id": "match-20261113T191413Z"
+    },
+    {
+      "match_id": 1550,
+      "nct_id": "NCT00678418",
+      "outcome_role": "secondary",
+      "outcome_position": 3,
+      "pmid": "23701526",
+      "input_hash": "b234ee70cf7e644274af1d613bd11d4551b27fdbb23fb4a9aac7558e7b943428",
+      "match_run_id": "match-20261113T191413Z"
+    },
+    {
+      "match_id": 1572,
+      "nct_id": "NCT02466126",
+      "outcome_role": "secondary",
+      "outcome_position": 0,
+      "pmid": "37674395",
+      "input_hash": "55c6a0fbac3d2d1e25978dfa58d32638b7178094ce3642c90eed1164c014fa86",
+      "match_run_id": "match-20261113T191413Z"
+    },
+    {
+      "match_id": 1524,
+      "nct_id": "NCT03564301",
+      "outcome_role": "secondary",
+      "outcome_position": 2,
+      "pmid": "39093380",
+      "input_hash": "2ecc8efd10cf49da359fc80356a7abd0e9aba7eb7615867ddd9e245a130b055c",
+      "match_run_id": "match-20261113T191413Z"
+    },
+    {
+      "match_id": 1624,
+      "nct_id": "NCT00076232",
+      "outcome_role": "secondary",
+      "outcome_position": 0,
+      "pmid": "20214474",
+      "input_hash": "a67cfd6f77f5d0b53480ce5ec7c3a730893dc15ad1ba5fd2c3cc4f7fc631be66",
+      "match_run_id": "match-20261113T191413Z"
+    },
+    {
+      "match_id": 1528,
+      "nct_id": "NCT00536185",
+      "outcome_role": "primary",
+      "outcome_position": 0,
+      "pmid": "19717473",
+      "input_hash": "351485008f7477b305641364ebcbf3235d8cbb0c40895f5cf6ea2270412a7ccf",
+      "match_run_id": "match-20261113T191413Z"
+    },
+    {
+      "match_id": 1579,
+      "nct_id": "NCT00262054",
+      "outcome_role": "secondary",
+      "outcome_position": 1,
+      "pmid": "18703471",
+      "input_hash": "9afcbf5eb4f4373e064631cba4596b636b8dc85d7ee87cf9d779939cef3fe3d2",
+      "match_run_id": "match-20261113T191413Z"
+    },
+    {
+      "match_id": 1544,
+      "nct_id": "NCT00678418",
+      "outcome_role": "secondary",
+      "outcome_position": 2,
+      "pmid": "22945623",
+      "input_hash": "970c751bee83f8e6abeeac06c85c15ddc5a9e648312d72aadbb60709ed46a8b0",
+      "match_run_id": "match-20261113T191413Z"
+    },
+    {
+      "match_id": 1509,
+      "nct_id": "NCT00940394",
+      "outcome_role": "secondary",
+      "outcome_position": 0,
+      "pmid": "23433723",
+      "input_hash": "db75e19b04fce0e89b009b79f86cf5c73c01dda1d26c1e46effb9a884b36eea2",
+      "match_run_id": "match-20261113T191413Z"
+    },
+    {
+      "match_id": 1541,
+      "nct_id": "NCT00678418",
+      "outcome_role": "primary",
+      "outcome_position": 0,
+      "pmid": "22945623",
+      "input_hash": "8b69a3286cc18b7bba342b5e4f5587844a14c65b7bfba896191cbe46bcfa48a5",
+      "match_run_id": "match-20261113T191413Z"
+    },
+    {
+      "match_id": 1673,
+      "nct_id": "NCT04193189",
+      "outcome_role": "other",
+      "outcome_position": 0,
+      "pmid": "39616603",
+      "input_hash": "79aaf8c48e53372698663f56fa0aee280113d3b7b62ee0a4d4b0d3f33127b5d0",
+      "match_run_id": "match-20261113T191413Z"
+    },
+    {
+      "match_id": 1654,
+      "nct_id": "NCT02058420",
+      "outcome_role": "other",
+      "outcome_position": 2,
+      "pmid": "29954374",
+      "input_hash": "bc311d07431c12d440ac0549f5f1ed63b2e62f39464779d9d4fb9c835aec4ddc",
+      "match_run_id": "match-20261113T191413Z"
+    },
+    {
+      "match_id": 1549,
+      "nct_id": "NCT00678418",
+      "outcome_role": "secondary",
+      "outcome_position": 2,
+      "pmid": "23701526",
+      "input_hash": "db8d223ce23383a851cf3ef6a00211de1df2fae05d7cdf2537c40c1dfaf65fc8",
+      "match_run_id": "match-20261113T191413Z"
+    },
+    {
+      "match_id": 1545,
+      "nct_id": "NCT00678418",
+      "outcome_role": "secondary",
+      "outcome_position": 3,
+      "pmid": "22945623",
+      "input_hash": "7d6cec873504c72b71ca86d2b678fee4a0d8025988cbe36cec8eeab13db6e630",
+      "match_run_id": "match-20261113T191413Z"
+    }
+  ]
+}

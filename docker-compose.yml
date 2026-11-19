@@ -1,0 +1,50 @@
+# Postgres, the API (port 8000) and the dashboard (port 8501).
+#   docker compose up --build
+# Put OPENAI_API_KEY (and optionally NCBI_API_KEY) in your shell or a .env file next to this file.
+# The model key is only used when you press Analyze Trial in the dashboard; the API never calls the model.
+services:
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: trialtrace
+      POSTGRES_PASSWORD: trialtrace
+      POSTGRES_DB: trialtrace
+    volumes:
+      - dbdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U trialtrace"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  api:
+    build: .
+    environment: &app_env
+      TRIALTRACE_DATABASE_URL: postgresql://trialtrace:trialtrace@db:5432/trialtrace
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      NCBI_API_KEY: ${NCBI_API_KEY:-}
+      TRIALTRACE_ALLOWED_EMAILS: ${TRIALTRACE_ALLOWED_EMAILS:-}
+      TRIALTRACE_DISABLE_LOGIN: ${TRIALTRACE_DISABLE_LOGIN:-0}
+    depends_on:
+      db:
+        condition: service_healthy
+    command: sh -c "python -m trialtrace.db.migrate && uvicorn trialtrace.api:app --host 0.0.0.0 --port 8000"
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./data:/app/data
+
+  dashboard:
+    build: .
+    environment: *app_env
+    depends_on:
+      - api
+    command: streamlit run dashboard/app.py --server.port 8501 --server.address 0.0.0.0 --server.headless true
+    ports:
+      - "8501:8501"
+    volumes:
+      - ./data:/app/data
+      - ./.streamlit:/app/.streamlit:ro      # theme, plus secrets.toml with the Google sign-in keys
+
+volumes:
+  dbdata:
