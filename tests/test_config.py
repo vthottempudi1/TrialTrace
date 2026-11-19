@@ -12,8 +12,9 @@ from pydantic import ValidationError
 from trialtrace.config import Settings
 
 
-def test_defaults_need_no_secrets():
-    # _env_file=None: ignore any .env file, so the test is the same on every laptop
+def test_defaults_need_no_secrets(monkeypatch):
+    # _env_file=None ignores .env; delenv ignores the CI database setting, so the test is the same everywhere
+    monkeypatch.delenv("TRIALTRACE_DATABASE_URL", raising=False)
     settings = Settings(_env_file=None)
     assert settings.pubmed_base_url.endswith("/entrez/eutils")
     assert settings.database_url is None

@@ -22,6 +22,12 @@ evals/*/
 !evals/validation_v1/
 evals/validation_v1/*
 !evals/validation_v1/assisted_review/
+# one small file a test reads
+!evals/safety/
+evals/safety/*
+!evals/safety/challenge/
+evals/safety/challenge/*
+!evals/safety/challenge/cases.json
 
 # Safety work deferred pending evaluation metrics
 # /trialtrace/safety/

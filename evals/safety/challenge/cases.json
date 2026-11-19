@@ -1,0 +1,106 @@
+{
+  "about": "CHALLENGE SET, constructed by hand on 2026-11-11. These are NOT real papers or real trials. Each case is a made-up abstract beside a made-up registry table, written to exercise the comparison branches the pool cannot test (numbers that agree, numbers that differ, different populations) with explicit denominators. Scores are reported on their own and never mixed with the pool evaluation or used in the keep rule. 'category' is what a careful person concludes.",
+  "cases": [
+    {
+      "id": "ch01",
+      "why": "counts with denominators that agree, group names equal to the registry titles",
+      "abstract": "We randomly assigned 151 patients to Drug X or placebo. The primary end point was met. Serious adverse events occurred in 42 of 101 patients in the Drug X group and in 26 of 50 patients in the placebo group. Drug X had an acceptable safety profile.",
+      "registry": {"threshold": 5, "arms": [{"title": "Drug X", "deaths": [6, 101], "serious": [42, 101]}, {"title": "Placebo", "deaths": [4, 50], "serious": [26, 50]}], "events": []},
+      "expected": [
+        {"kind": "serious", "group": "Drug X group", "count": 42, "denominator": 101, "category": "safety_consistent"},
+        {"kind": "serious", "group": "placebo group", "count": 26, "denominator": 50, "category": "safety_consistent"}
+      ]
+    },
+    {
+      "id": "ch02",
+      "why": "same population, a count that differs",
+      "abstract": "A total of 151 patients were enrolled. Serious adverse events occurred in 38 of 101 patients in the Drug X group and in 26 of 50 patients in the placebo group. No new safety signals were seen.",
+      "registry": {"threshold": 5, "arms": [{"title": "Drug X", "deaths": [6, 101], "serious": [42, 101]}, {"title": "Placebo", "deaths": [4, 50], "serious": [26, 50]}], "events": []},
+      "expected": [
+        {"kind": "serious", "group": "Drug X group", "count": 38, "denominator": 101, "category": "safety_number_differs"},
+        {"kind": "serious", "group": "placebo group", "count": 26, "denominator": 50, "category": "safety_consistent"}
+      ]
+    },
+    {
+      "id": "ch03",
+      "why": "equal counts out of different populations (randomised 102 against treated 101)",
+      "abstract": "In this trial, 152 patients underwent randomization. Serious adverse events occurred in 42 of 102 patients in the Drug X group. Efficacy was maintained at week 48.",
+      "registry": {"threshold": 5, "arms": [{"title": "Drug X", "deaths": [6, 101], "serious": [42, 101]}, {"title": "Placebo", "deaths": [4, 50], "serious": [26, 50]}], "events": []},
+      "expected": [
+        {"kind": "serious", "group": "Drug X group", "count": 42, "denominator": 102, "category": "safety_not_comparable"}
+      ]
+    },
+    {
+      "id": "ch04",
+      "why": "deaths with denominators: one agrees, one differs",
+      "abstract": "Patients received Drug X or placebo for 24 weeks. There were 6 deaths among 101 patients in the Drug X group and 7 deaths among 50 patients in the placebo group. Most adverse events were mild.",
+      "registry": {"threshold": 5, "arms": [{"title": "Drug X", "deaths": [6, 101], "serious": [42, 101]}, {"title": "Placebo", "deaths": [4, 50], "serious": [26, 50]}], "events": []},
+      "expected": [
+        {"kind": "death", "group": "Drug X group", "count": 6, "denominator": 101, "category": "safety_consistent"},
+        {"kind": "death", "group": "placebo group", "count": 7, "denominator": 50, "category": "safety_number_differs"}
+      ]
+    },
+    {
+      "id": "ch05",
+      "why": "a named non-serious event with count, denominator and percent: one agrees, one differs",
+      "abstract": "We enrolled 151 adults. Nausea was reported in 30 of 101 patients (29.7%) in the Drug X group and in 9 of 50 patients (18.0%) in the placebo group. Discontinuations were infrequent.",
+      "registry": {"threshold": 5, "arms": [{"title": "Drug X", "deaths": [6, 101], "serious": [42, 101]}, {"title": "Placebo", "deaths": [4, 50], "serious": [26, 50]}],
+                   "events": [{"kind": "other", "term": "Nausea", "counts": {"Drug X": [30, 101], "Placebo": [5, 50]}}]},
+      "expected": [
+        {"kind": "event", "term": "nausea", "group": "Drug X group", "count": 30, "denominator": 101, "percent": 29.7, "category": "safety_consistent"},
+        {"kind": "event", "term": "nausea", "group": "placebo group", "count": 9, "denominator": 50, "percent": 18.0, "category": "safety_number_differs"}
+      ]
+    },
+    {
+      "id": "ch06",
+      "why": "an explicit none with a denominator against a registry that lists deaths",
+      "abstract": "This single-group study enrolled 60 participants. No deaths occurred among the 60 participants. Headache was reported in 12 of 60 participants.",
+      "registry": {"threshold": 0, "arms": [{"title": "Drug Y", "deaths": [2, 60], "serious": [5, 60]}],
+                   "events": [{"kind": "other", "term": "Headache", "counts": {"Drug Y": [12, 60]}}]},
+      "expected": [
+        {"kind": "death", "group": null, "count": 0, "denominator": 60, "category": "safety_number_differs"},
+        {"kind": "event", "term": "headache", "group": null, "count": 12, "denominator": 60, "category": "safety_consistent"}
+      ]
+    },
+    {
+      "id": "ch07",
+      "why": "definitions that are never compared: a grade and treatment-related, even with matching numbers",
+      "abstract": "A total of 151 patients were treated. Grade 3 or higher neutropenia occurred in 21 of 101 patients in the Drug X group. Treatment-related serious adverse events occurred in 42 of 101 patients in the Drug X group.",
+      "registry": {"threshold": 5, "arms": [{"title": "Drug X", "deaths": [6, 101], "serious": [42, 101]}, {"title": "Placebo", "deaths": [4, 50], "serious": [26, 50]}],
+                   "events": [{"kind": "other", "term": "Neutropenia", "counts": {"Drug X": [21, 101], "Placebo": [2, 50]}}]},
+      "expected": [
+        {"kind": "event", "term": "neutropenia", "group": "Drug X group", "count": 21, "denominator": 101, "grade": "Grade 3 or higher", "category": "safety_not_comparable"},
+        {"kind": "serious", "group": "Drug X group", "count": 42, "denominator": 101, "related": true, "category": "safety_not_comparable"}
+      ]
+    },
+    {
+      "id": "ch08",
+      "why": "a group written as an abbreviation: a person can match it, word matching cannot (the known gap)",
+      "abstract": "Patients were assigned to trastuzumab deruxtecan (T-DXd) or chemotherapy. Serious adverse events occurred in 42 of 101 patients in the T-DXd group and in 26 of 50 patients in the chemotherapy group.",
+      "registry": {"threshold": 5, "arms": [{"title": "Trastuzumab Deruxtecan", "deaths": [6, 101], "serious": [42, 101]}, {"title": "Chemotherapy", "deaths": [4, 50], "serious": [26, 50]}], "events": []},
+      "expected": [
+        {"kind": "serious", "group": "T-DXd group", "count": 42, "denominator": 101, "category": "safety_consistent"},
+        {"kind": "serious", "group": "chemotherapy group", "count": 26, "denominator": 50, "category": "safety_consistent"}
+      ]
+    },
+    {
+      "id": "ch09",
+      "why": "a percent with a denominator, within rounding of the registry and outside it",
+      "abstract": "The safety population included 400 patients. Serious adverse events were reported in 12.5% of 200 patients in the Drug Z group and in 20.0% of 200 patients in the placebo group.",
+      "registry": {"threshold": 5, "arms": [{"title": "Drug Z", "deaths": [1, 200], "serious": [25, 200]}, {"title": "Placebo", "deaths": [2, 200], "serious": [30, 200]}], "events": []},
+      "expected": [
+        {"kind": "serious", "group": "Drug Z group", "denominator": 200, "percent": 12.5, "category": "safety_consistent"},
+        {"kind": "serious", "group": "placebo group", "denominator": 200, "percent": 20.0, "category": "safety_number_differs"}
+      ]
+    },
+    {
+      "id": "ch10",
+      "why": "no safety statement at all (a false alarm test) and a count with no denominator",
+      "abstract": "We enrolled 151 patients. The treatment was well tolerated and the most common adverse events were nausea and fatigue. There were 6 deaths in the Drug X group.",
+      "registry": {"threshold": 5, "arms": [{"title": "Drug X", "deaths": [6, 101], "serious": [42, 101]}, {"title": "Placebo", "deaths": [4, 50], "serious": [26, 50]}], "events": []},
+      "expected": [
+        {"kind": "death", "group": "Drug X group", "count": 6, "category": "safety_not_comparable"}
+      ]
+    }
+  ]
+}
