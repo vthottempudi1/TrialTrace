@@ -15,7 +15,7 @@ The hosted dashboard requires Google sign-in with an allowlisted email.
 | Version | Scope | Status |
 | --- | --- | --- |
 | **v1 · Registry and abstract validation** | Validate registered trial outcomes against results published in the registry and linked paper abstracts. Track changes between captured registry versions, results-posting status, completion timelines, and sponsor reporting counts | Implemented |
-| **v2 · Safety** | Extract safety statements from abstracts and compare them with registry adverse-event evidence | Separate workstream in `trialtrace/safety/`, currently paused |
+| **v2 · Safety** | Extract safety statements from abstracts and compare them with registry adverse-event evidence | Planned extension |
 | **v3 · Full-paper text analysis** | Validate registered outcomes against full paper texts and trace supporting evidence across paper sections | Planned extension |
 
 **All safety-related work belongs to project v2.** This includes adverse-event ingestion and parsing, database tables and migrations, statement extraction, numeric and time-window comparisons, assisted matching, review tools, and supporting documentation.
@@ -30,6 +30,21 @@ The hosted dashboard requires Google sign-in with an allowlisted email.
 - **Export findings.** Download CSV and Markdown reports.
 
 The dashboard provides All trials, One trial, Assisted review, Sponsors, and Patterns views. Review queues distinguish Needs review, Human-verified, and Unresolved findings.
+
+## v1 evaluation results
+
+The LLM abstract reader was scored on trials it had never seen, against targets written down before the run (design decisions D93, D42, D101). Ranges are 95% Wilson intervals. Counts are small, so treat these as point estimates.
+
+| Measure | Result | 95% range | Set |
+| --- | --- | --- | --- |
+| Precision (when it says "reported", is it right?) | **91%** (20 of 22) | 72–97% | 19 unseen trials, target 90% |
+| Recall (reported outcomes found with a real quote) | **80%** (20 of 25) | 61–91% | same set, target 80% |
+| Made-up quotes or failed reads | **0 / 0** | | 204 model calls; quotes are checked by code |
+| Precision and recall on a second frozen set | **85% / 85%** | 66–94% | 19 trials, 72 outcomes |
+| LLM reader vs plain keyword code (recall) | **85% vs 31%** | 66–94% vs 17–50% | second frozen set |
+| Human agreement with the labels | **90%** (27 of 30), kappa 0.85 | | 30 pairs labelled blind |
+
+About 42% of outcomes are called "unclear" and sent to a reviewer. That is routing, not a wrong answer. Labels were partly AI-drafted and checked by a person, and the sets are small.
 
 ## Architecture
 
@@ -77,7 +92,7 @@ flowchart TB
     API --> EXPORT
 ```
 
-The dashboard uses the Python application and PostgreSQL directly. The optional API exposes stored data, exports, and review operations. Raw downloads preserve the source material behind parsed evidence. Safety v2 modules are grouped under `trialtrace/safety/` while that workstream is paused.
+The dashboard uses the Python application and PostgreSQL directly. The optional API exposes stored data, exports, and review operations. Raw downloads preserve the source material behind parsed evidence.
 
 ### From a trial to a reviewed finding
 
