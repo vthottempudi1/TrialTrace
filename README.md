@@ -131,6 +131,8 @@ NCBI_API_KEY=your_ncbi_key
 TRIALTRACE_DISABLE_LOGIN=1
 ```
 
+The database URL above is for a local PostgreSQL only. On Google Cloud the hosted dashboard gets its URL from Secret Manager, and it points to the separate Cloud SQL database (see the [deployment guide](docs/DEPLOY_GCP.md)). The two databases are not synced.
+
 Start PostgreSQL with a database matching that connection string, then run the workflow.
 
 ```bash
