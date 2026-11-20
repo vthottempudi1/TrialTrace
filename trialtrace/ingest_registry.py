@@ -193,7 +193,7 @@ def ingest_trial(
         return IngestResult(nct_id=nct_id, status="failed", attempts=attempts, detail=code)
 
     # Step 3: keep the untouched file, even if parsing fails later
-    stored = save_raw(nct_id, fetch.url, fetch.retrieved_at, fetch.body, settings.data_dir)
+    stored = save_raw(nct_id, fetch.url, fetch.retrieved_at, fetch.body, settings.data_dir, bucket=settings.raw_bucket)
 
     # Step 4: the snapshot and its evidence
     try:

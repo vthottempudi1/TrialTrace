@@ -44,6 +44,7 @@ class Settings(BaseSettings):
 
     # Storage
     data_dir: Path = Path("data")       # raw downloads go here
+    raw_bucket: str | None = None       # Google Cloud Storage bucket that also keeps a copy of raw downloads (TRIALTRACE_RAW_BUCKET)
     database_url: str | None = None     # None = not set; code needing it must say so
 
     # Model

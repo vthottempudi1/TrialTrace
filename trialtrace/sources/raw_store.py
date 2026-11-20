@@ -11,6 +11,7 @@
 
 import hashlib                              # sha256 fingerprints
 import json
+import logging
 from datetime import datetime
 from pathlib import Path
 
@@ -59,6 +60,18 @@ def compute_content_hash(body: bytes, source: str) -> str:
     return hashlib.sha256(canonical.encode("utf-8")).hexdigest()
 
 
+def upload_to_bucket(bucket_name: str, key: str, path: Path) -> None:
+    """Copy one local file to Google Cloud Storage as <key>. Never overwrites an existing object."""
+    from google.api_core.exceptions import PreconditionFailed      # imported here: only needed when a bucket is set
+    from google.cloud import storage
+
+    blob = storage.Client().bucket(bucket_name).blob(key)
+    try:
+        blob.upload_from_filename(str(path), if_generation_match=0)    # 0 = only if the object does not exist yet
+    except PreconditionFailed:
+        pass                                                           # already there: the first copy stays the evidence
+
+
 def save_raw(
     nct_id: str,
     url: str,
@@ -67,8 +80,13 @@ def save_raw(
     data_dir: Path,
     source: str = "clinicaltrials",
     extension: str = "json",
+    bucket: str | None = None,
 ) -> StoredRaw:
-    """Save untouched bytes under raw/<source>/<NCT>/<hash>.<extension>, once."""
+    """Save untouched bytes under raw/<source>/<NCT>/<hash>.<extension>, once.
+
+    If a bucket name is given, the same files are also copied to gs://<bucket>/raw/<source>/<NCT>/ (a backup that
+    survives the laptop). A failed upload is logged and does not stop the ingest; `gcloud storage rsync` catches up later.
+    """
     content_hash = compute_content_hash(body, source)
 
     folder = data_dir / "raw" / source / nct_id
@@ -89,5 +107,13 @@ def save_raw(
         meta_path = folder / f"{content_hash}.meta.json"
         meta_path.write_text(stored.model_dump_json(indent=2), encoding="utf-8")
         raw_path.write_bytes(body)                        # last: the raw file's existence means "fully saved"
+
+    if bucket:
+        for file in (raw_path, folder / f"{content_hash}.meta.json"):
+            key = f"raw/{source}/{nct_id}/{file.name}"
+            try:
+                upload_to_bucket(bucket, key, file)
+            except Exception as error:                    # a backup problem must not lose the download
+                logging.warning("raw backup to gs://%s/%s failed: %s", bucket, key, error)
 
     return stored

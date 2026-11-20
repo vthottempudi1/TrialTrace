@@ -107,7 +107,7 @@ def ingest_papers(
 
         # keep the untouched file BEFORE reading it, so a parser bug never loses the original
         stored = save_raw(nct_id, fetch.url, fetch.retrieved_at, fetch.body, settings.data_dir,
-                          source="pubmed", extension="xml")
+                          source="pubmed", extension="xml", bucket=settings.raw_bucket)
         try:
             papers = parse_pubmed_xml(fetch.body)
         except (ParseError, ValidationError):

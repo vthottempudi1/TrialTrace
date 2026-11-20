@@ -81,6 +81,7 @@ flowchart TB
         REPORT["Build findings and review queue"]
     end
     RAW[("Raw source files by content hash")]
+    GCS[("Google Cloud Storage<br/>Raw files and metadata backup")]
     DB[("PostgreSQL<br/>Snapshots, evidence, papers, matches, reviews")]
     MODEL["OpenAI abstract reader"]
     DASH["Streamlit dashboard<br/>Google sign-in and reviewer decisions"]
@@ -90,6 +91,7 @@ flowchart TB
     CT --> ING
     PM --> ING
     ING --> RAW
+    ING -->|"Configured ingestion backup"| GCS
     ING --> DB
     DB --> LINK
     LINK --> MATCH
@@ -109,11 +111,11 @@ flowchart TB
     API --> EXPORT
 ```
 
-The dashboard uses the Python application and PostgreSQL directly. The optional API exposes stored data, exports, and review operations. Raw downloads preserve the source material behind parsed evidence.
+The dashboard uses the Python application and PostgreSQL directly. The optional API exposes stored data, exports, and review operations. Ingestion saves raw downloads locally and, when `TRIALTRACE_RAW_BUCKET` is configured, uploads the files and metadata to Google Cloud Storage. The deployed bucket is `gs://trialtrace-514821-raw` in `us-central1`. The current hosted dashboard reads its evidence from PostgreSQL; bucket uploads are performed by the configured ingestion process.
 
 ### From a trial to a reviewed finding
 
-1. **Capture the registry record.** Save the raw response, record its content hash, and extract outcomes and citable evidence. Preserve each distinct version captured.
+1. **Capture the registry record.** Save the raw response and metadata locally, copy them to the configured Cloud Storage bucket, and extract outcomes and citable evidence. Preserve each distinct content version with its hash.
 2. **Collect candidate papers.** Retrieve PubMed records and abstracts, then check their connection to the trial.
 3. **Read each outcome-paper pair.** Give the LLM the registered outcome and abstract. Store its answer, supporting quote, and model metadata. An optional rules baseline provides a separate comparison.
 4. **Validate and combine evidence.** Check quoted text and offsets, apply trial-identity safeguards, and combine paper-level answers into one finding per registered outcome.
@@ -147,6 +149,8 @@ NCBI_API_KEY=your_ncbi_key
 # Local development
 TRIALTRACE_DISABLE_LOGIN=1
 ```
+
+Cloud raw-source backup is deployed in `gs://trialtrace-514821-raw`. To enable uploads from your ingestion environment, install `pip install -e ".[cloud]"`, configure Application Default Credentials, and set `TRIALTRACE_RAW_BUCKET=trialtrace-514821-raw`. Each upload uses a create-only object precondition. An upload failure is logged while local ingestion continues, and an operator can reconcile missing objects. See the [storage setup and recovery steps](docs/DEPLOY_GCP.md#raw-source-files-in-cloud-storage-added-2026-11-19).
 
 The database URL above is for a local PostgreSQL only. On Google Cloud the hosted dashboard gets its URL from Secret Manager, and it points to the separate Cloud SQL database (see the [deployment guide](docs/DEPLOY_GCP.md)). The two databases are not synced.
 
@@ -219,4 +223,4 @@ tests/              Automated tests
 docs/               Workflows, deployment, and design decisions
 ```
 
-The dashboard is deployed using Google Cloud Run and Cloud SQL. **CI/CD:** every push to `main` runs the tests (`ci.yml`); when they pass, `deploy.yml` builds the Docker image, pushes it to Artifact Registry and updates the Cloud Run service. GitHub signs in to Google with Workload Identity Federation, so no key file is stored. The [deployment guide](docs/DEPLOY_GCP.md) describes its configuration, and [workflow diagrams](docs/WORKFLOWS.md) expand on the data flow.
+The dashboard is deployed using Google Cloud Run and Cloud SQL, with raw-source backup in Google Cloud Storage. **CI/CD:** every push to `main` runs the tests (`ci.yml`); when they pass, `deploy.yml` builds the Docker image, pushes it to Artifact Registry and updates the Cloud Run service. GitHub signs in to Google with Workload Identity Federation, so no key file is stored. The [deployment guide](docs/DEPLOY_GCP.md) describes its configuration, and [workflow diagrams](docs/WORKFLOWS.md) expand on the data flow.

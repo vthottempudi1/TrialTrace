@@ -31,7 +31,8 @@ from trialtrace.trial_view import load_abstract, load_outcomes, load_papers, que
 from trialtrace.review.export_findings import export_rows, to_csv, to_markdown
 from trialtrace.review.highlight import highlighted_markdown, numbered_markdown
 from trialtrace.review.match_review import (STATES, UNRESOLVED_REASONS, count_states, counts_by_trial, filter_rows, load_by_match_ids,
-                                            load_queue, save_assisted_review, save_review)
+                                            load_queue, outcome_key, outcome_overview, save_assisted_review, save_review, sort_by_risk,
+                                            sort_overview, OUTCOME_STATUS_NAMES)
 
 
 AUTO_RUN_LIMIT = 5      # up to this many new model calls run at once; more needs a confirm click
@@ -104,7 +105,7 @@ STATUS_BADGE = {"identified": ":green-badge[identified]", "ambiguous": ":orange-
 ROLE_BADGE = {"primary": ":blue-badge[primary]", "secondary": ":violet-badge[secondary]", "other": ":gray-badge[other]"}
 
 
-def show_queue(conn, queue, reviewer, scope):
+def show_queue(conn, queue, reviewer, scope, only_key=None):
     """Three counts (each one a button that opens its findings), then the findings with review controls.
 
     scope ("one" or "all") keeps the widget keys of the two tabs apart.
@@ -121,13 +122,38 @@ def show_queue(conn, queue, reviewer, scope):
     if not reviewer:
         st.warning("Enter your reviewer name in the sidebar to review.")
     rows = [row for row in queue if row["state"] == chosen]
+    if only_key is not None:                                  # one outcome picked in the overview; the counts above stay for the whole trial
+        rows = [row for row in rows if outcome_key(row) == only_key]
     rows = apply_filters(rows, scope)
+    if st.toggle("Sort by risk (unclear first)", value=True, key=f"{scope}_risk"):
+        rows = sort_by_risk(rows)
     if not rows:
         st.write(f"Nothing is {STATE_NAMES[chosen].lower()} with these filters.")
     for row in rows[:SHOW_LIMIT]:
         show_finding(conn, row, reviewer, scope)
     if len(rows) > SHOW_LIMIT:
         st.caption(f"Showing the first {SHOW_LIMIT} of {len(rows)}. Open a trial in the One trial view for the rest.")
+
+
+def show_outcome_overview(queue):
+    """One row per registered outcome, built from ALL the trial's findings. Returns the key of the picked outcome, or None."""
+    st.subheader("Outcome overview")
+    order = st.radio("Order", ["Registry order", "Review priority"], horizontal=True, key="overview_order", label_visibility="collapsed")
+    lines = sort_overview(outcome_overview(queue), by_priority=(order == "Review priority"))
+    table = []
+    for line in lines:
+        counts = line["counts"]
+        parts = [f"{counts[name]} {name.replace('_', ' ')}" for name in ("identified", "ambiguous", "not_identified") if counts[name]]
+        table.append({"Role": f"{line['role'].capitalize()} {line['position'] + 1}", "Registered outcome": line["text"],
+                      "Outcome status": OUTCOME_STATUS_NAMES.get(line["status"], line["status"]),
+                      "Paper evidence": f"{line['papers']} paper(s): " + ", ".join(parts),
+                      "Review progress": f"{line['reviewed']}/{line['papers']} reviewed"})
+    event = st.dataframe(table, width="stretch", hide_index=True, key="overview_table", selection_mode="single-row", on_select="rerun",
+                         column_config={"Registered outcome": st.column_config.TextColumn(width="large")})
+    st.caption("Outcome status uses the same roll-up as the report: identified if any paper has an identified match, unclear if only ambiguous. "
+               "Click a row to show only that outcome's findings below; click it again to clear. Nothing is approved at outcome level.")
+    selected = event.selection.rows
+    return lines[selected[0]]["key"] if selected else None
 
 
 def apply_filters(rows, scope):
@@ -561,10 +587,12 @@ if view == "One trial":
             else:
                 st.write("No papers stored.")
 
-            st.subheader("Review queue")
             queue = load_queue(conn, nct_id)
             if not queue:
+                st.subheader("Review queue")
                 st.write("No model findings yet.")
                 st.stop()
-            show_queue(conn, queue, reviewer, "one")
+            picked = show_outcome_overview(queue)
+            st.subheader("Review queue")
+            show_queue(conn, queue, reviewer, "one", only_key=picked)
             st.caption("'Not identified' in an abstract does not mean the full paper omits the outcome.")

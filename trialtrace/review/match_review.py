@@ -12,6 +12,8 @@
 
 from psycopg.rows import dict_row
 
+from trialtrace.compare.paper_rollup import rollup_statuses
+
 NEEDS_REVIEW = "needs_review"
 HUMAN_VERIFIED = "human_verified"
 UNRESOLVED = "unresolved"
@@ -237,3 +239,56 @@ def filter_rows(rows: list[dict], statuses: list[str] | None = None, roles: list
             continue
         kept.append(row)
     return kept
+
+
+# review risk of one finding: 0 = look first, 2 = look last
+RISK_BY_STATUS = {"ambiguous": 0, "identified": 1, "not_identified": 2}
+
+
+def risk_rank(row: dict) -> int:
+    """0 = high, 1 = normal, 2 = low. Unknown statuses count as high, so nothing hides at the bottom."""
+    return RISK_BY_STATUS.get(row["status"], 0)
+
+
+def sort_by_risk(rows: list[dict]) -> list[dict]:
+    """Highest risk first. The sort is stable, so inside one level the trial order stays as it was."""
+    return sorted(rows, key=risk_rank)
+
+
+# ---- Outcome overview: one row per registered outcome, built from the per-paper findings (nothing is approved at outcome level) ----
+
+ROLE_ORDER = {"primary": 0, "secondary": 1, "other": 2}
+OUTCOME_STATUS_NAMES = {"identified": "Identified", "unclear": "Unclear", "unknown": "Unknown", "not_identified": "Not identified"}
+
+
+def outcome_key(row: dict) -> tuple:
+    """What identifies one registered outcome: trial, registry version, role and position (positions restart in each role)."""
+    return (row["nct_id"], row["registry_hash"], row["outcome_role"], row["outcome_position"])
+
+
+def outcome_overview(rows: list[dict]) -> list[dict]:
+    """One line per registered outcome, in registry order (primary first). Give it ALL findings of the trial, not a filtered list.
+
+    The outcome status uses the same roll-up rule as the findings report. The review priority is separate: an outcome
+    that is identified in one paper can still have an ambiguous paper, and then it is looked at earlier.
+    """
+    groups: dict[tuple, list[dict]] = {}
+    for row in rows:
+        groups.setdefault(outcome_key(row), []).append(row)
+    lines = []
+    for key, group in groups.items():
+        statuses = [row["status"] for row in group]
+        status = rollup_statuses(statuses, False)
+        counts = {name: statuses.count(name) for name in ("identified", "ambiguous", "not_identified")}
+        reviewed = sum(1 for row in group if row["state"] != NEEDS_REVIEW)
+        priority = 0 if counts["ambiguous"] or status in ("unclear", "unknown") else (1 if status == "identified" else 2)
+        first = group[0]
+        lines.append({"key": key, "role": first["outcome_role"], "position": first["outcome_position"], "text": first["outcome_text"],
+                      "status": status, "papers": len(group), "counts": counts, "reviewed": reviewed, "priority": priority})
+    lines.sort(key=lambda line: (ROLE_ORDER.get(line["role"], 3), line["position"]))
+    return lines
+
+
+def sort_overview(lines: list[dict], by_priority: bool) -> list[dict]:
+    """Registry order (as given), or review priority first with registry order inside each level."""
+    return sorted(lines, key=lambda line: line["priority"]) if by_priority else lines

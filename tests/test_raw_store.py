@@ -44,3 +44,29 @@ def test_saving_twice_keeps_the_first_file(tmp_path):
     assert first.raw_file_path == second.raw_file_path
     saved = (tmp_path / "raw/clinicaltrials/NCT04644237" / f"{first.content_hash}.json").read_bytes()
     assert saved == record("2026-01-01")
+
+
+def test_bucket_gets_the_raw_and_meta_files(tmp_path, monkeypatch):
+    uploads = []
+    monkeypatch.setattr("trialtrace.sources.raw_store.upload_to_bucket",
+                        lambda bucket, key, path: uploads.append((bucket, key, path.name)))
+    stored = save_raw("NCT04644237", "https://example.org", datetime.now(timezone.utc), record("2026-01-01"),
+                      tmp_path, bucket="my-bucket")
+    names = {(b, k) for b, k, _ in uploads}
+    assert ("my-bucket", f"raw/clinicaltrials/NCT04644237/{stored.content_hash}.json") in names
+    assert ("my-bucket", f"raw/clinicaltrials/NCT04644237/{stored.content_hash}.meta.json") in names
+
+
+def test_failed_upload_does_not_lose_the_download(tmp_path, monkeypatch):
+    def broken(bucket, key, path):
+        raise RuntimeError("no network")
+    monkeypatch.setattr("trialtrace.sources.raw_store.upload_to_bucket", broken)
+    stored = save_raw("NCT04644237", "https://example.org", datetime.now(timezone.utc), record("2026-01-01"),
+                      tmp_path, bucket="my-bucket")
+    assert (tmp_path / "raw/clinicaltrials/NCT04644237" / f"{stored.content_hash}.json").exists()
+
+
+def test_no_bucket_means_no_upload(tmp_path, monkeypatch):
+    monkeypatch.setattr("trialtrace.sources.raw_store.upload_to_bucket",
+                        lambda *a: (_ for _ in ()).throw(AssertionError("should not upload")))
+    save_raw("NCT04644237", "https://example.org", datetime.now(timezone.utc), record("2026-01-01"), tmp_path)

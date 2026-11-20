@@ -954,3 +954,12 @@ Decision (owner, 2026-11-13): stop safety work for now and move to the dashboard
 - Limits: 109 outcomes still gives wide ranges; one primary labeller; the 400 downloaded trials are now stored in the local database.
 
 - Update 2026-11-16: the dashboard now also shows registry changes (One trial tab), results reporting by sponsor (Sponsors tab) and the fixed patterns (Patterns tab). Neutral colors, counts only, no sponsor score or ranking, each with the "stored trials only" note. These checks already existed in the report; only the display is new. Deployed as image v2.
+
+## D106. Raw-source backup deployed to Google Cloud Storage (2026-11-19)
+
+- The deployed bucket is `gs://trialtrace-514821-raw` in `US-CENTRAL1`. A read-only metadata check confirmed uniform bucket-level access and enforced public-access prevention.
+- `save_raw` preserves the source locally, then attempts source and metadata uploads when `TRIALTRACE_RAW_BUCKET` is configured. Both registry and PubMed ingestion pass the setting. The optional `cloud` dependency and Application Default Credentials belong to the ingestion environment.
+- Object keys mirror `raw/<source>/<NCT>/<hash>.<extension>` and the corresponding `.meta.json`. The upload adapter uses `if_generation_match=0` and treats an existing object as already retained. Source and metadata are separate uploads.
+- An upload failure is logged while ingestion continues. Re-ingestion or an operator's create-only copy can reconcile missing objects. Local files, bucket writes, and PostgreSQL transactions have separate persistence boundaries.
+- The hosted dashboard reads saved evidence from Cloud SQL. Its runtime does not read or write this bucket. Stored `raw_file_path` values remain local paths, and file consumers restore needed objects locally. Raw backup does not synchronize the local and cloud databases.
+- Documentation, article diagrams, interview examples, and the video-demo deck in `docs/presentations/` now show the deployed backup path. Setup and recovery steps are in [DEPLOY_GCP.md](DEPLOY_GCP.md).

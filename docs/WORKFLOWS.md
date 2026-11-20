@@ -4,7 +4,28 @@ How data moves through TrialTrace: the registry side, the PubMed side, safety, a
 the final combined picture. For the reasons behind each step see `DESIGN_DECISIONS.md`;
 for one trial followed end to end see `HOW_IT_WORKS.md`.
 
-## Current abstract/registry workflow (2026-11-11)
+## Current v1 storage and review workflow (2026-11-19)
+
+```mermaid
+flowchart LR
+  CT["ClinicalTrials.gov"] --> ING["Configured local ingestion"]
+  PM["PubMed"] --> ING
+  ING --> LOCAL[("Local raw files and metadata")]
+  ING -->|"Create-only backup uploads"| GCS[("Cloud Storage<br/>trialtrace-514821-raw")]
+  ING --> DB[("PostgreSQL<br/>Parsed records and evidence")]
+  DB --> CHECK["Registry checks and outcome-abstract matching"]
+  CHECK <--> LLM["Model reader"]
+  CHECK --> VALID["Quote validation and findings"]
+  VALID --> DB
+  DB --> UI["Dashboard and human review"]
+  UI --> DB
+```
+
+Ingestion writes locally before attempting the cloud backup. Registry and PubMed sources use the same `save_raw` adapter. The bucket stores source files and `.meta.json` at `raw/<source>/<NCT>/<hash>.<extension>`. Upload failures are logged per object while ingestion continues. Re-ingestion or an operator's create-only copy can reconcile missing objects.
+
+The current hosted dashboard uses Cloud SQL for saved records and evidence. It has no runtime bucket read/write path. Local-file consumers can restore their source paths from the backup objects. Raw backup and local-to-cloud database synchronization are separate operations. Setup is in [DEPLOY_GCP.md](DEPLOY_GCP.md#raw-source-files-in-cloud-storage-added-2026-11-19).
+
+## Historical combined workflow (2026-11-11)
 
 ```mermaid
 flowchart LR
@@ -54,6 +75,7 @@ flowchart TD
   B -->|"404 not found"| F[("ingest_failures<br/>step, error, tries")]
   B -->|"still failing"| F
   B -->|"ok"| C[("raw file<br/>untouched, named by its hash")]
+  C -->|"Configured backup"| GC[("Cloud Storage<br/>raw source and metadata")]
   C --> D["parse the record<br/>snapshot + evidence"]
   D -->|"unreadable or wrong trial"| F
   D --> E["parse the outcomes<br/>primary, secondary, other"]
@@ -149,6 +171,7 @@ flowchart TD
   S1 -->|"unavailable or invalid"| F[("failure recorded<br/>never read as no papers")]
   S1 -->|"ok or not_found"| S2["fetch the paper records<br/>XML, up to ~20 papers per file"]
   S2 --> RAW[("raw XML file<br/>untouched, named by its hash")]
+  RAW -->|"Configured backup"| GC[("Cloud Storage<br/>raw source and metadata")]
   RAW --> P["parse into one Paper per PMID<br/>title, abstract, type, listed trial IDs"]
   P --> ST[("papers")]
   P --> LK["link check, code rules<br/>is this paper really about this trial?"]
@@ -249,11 +272,14 @@ flowchart TD
   G --> PT["Patterns tab: fixed questions, lists of trials"]
 ```
 
-## 3C. Deployment workflow (Docker and Google Cloud, 2026-11-15, D104)
+## 3C. Deployment workflow (Docker, CI/CD, and Google Cloud, updated 2026-11-19)
 
 ```mermaid
 flowchart TD
   L["laptop: Dockerfile + docker-compose<br/>Postgres, API, dashboard"] --> B["gcloud builds submit"]
+  GH["GitHub push or pull request"] --> CI["Tests with PostgreSQL and Docker build check"]
+  CI -->|"Successful main run"| CD["Deploy workflow<br/>Workload Identity Federation"]
+  CD --> AR
   B --> AR[("Artifact Registry<br/>dashboard image")]
   AR --> CR["Cloud Run: trialtrace-dashboard<br/>0 to 2 instances, public URL"]
   SM[("Secret Manager<br/>database URL, OpenAI key,<br/>allowed emails, sign-in file")] --> CR
@@ -261,6 +287,8 @@ flowchart TD
   CR -->|"sign-in"| GO["Google OAuth<br/>redirect URI = service URL + /oauth2callback"]
   CR -->|"Analyze Trial only"| OA["OpenAI model"]
   U["reviewer browser"] -->|"https"| CR
+  ING["Configured local ingestion"] --> LOCAL[("Local raw files and metadata")]
+  ING -->|"Create-only backup uploads"| GCS[("Cloud Storage<br/>trialtrace-514821-raw")]
 
   classDef built fill:#d1fae5,stroke:#059669,color:#064e3b
   classDef planned fill:#e5e7eb,stroke:#6b7280,color:#374151
@@ -271,6 +299,7 @@ Key points
 - The same image runs locally (compose) and on Cloud Run. Cloud Run supplies the port; the start command copies the mounted sign-in file into place.
 - The service URL is public, so the app is the gate: Google sign-in plus an email allowlist. With no allowed emails nobody gets in.
 - Only the dashboard is deployed. The API is optional and not deployed. After changing a secret, start a new Cloud Run revision.
+- Cloud Storage is the deployed raw-source backup. Configured ingestion performs uploads independently of the dashboard runtime. Cloud SQL stores parsed data and evidence. The CI/CD workflow deploys application images; it does not synchronize raw sources or databases.
 - Steps and fixes: `DEPLOY_GCP.md`. The full design: `SYSTEM_DESIGN.md`.
 
 ## 4. Final combined workflow
@@ -289,6 +318,7 @@ flowchart LR
 
   subgraph STORE["Stored evidence"]
     RAW[("raw files<br/>JSON and XML, by hash")]
+    GCS[("Cloud Storage<br/>raw files and metadata backup")]
     TBL[("database<br/>snapshots, observations, evidence,<br/>outcomes, papers, links, failures")]
   end
 
@@ -305,6 +335,8 @@ flowchart LR
   PM --> I2
   I1 --> RAW
   I2 --> RAW
+  I1 -->|"Configured backup"| GCS
+  I2 -->|"Configured backup"| GCS
   I1 --> TBL
   I2 --> TBL
   TBL --> A1
