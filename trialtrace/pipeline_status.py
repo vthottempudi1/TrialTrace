@@ -170,13 +170,16 @@ def findings_line(rows: list[dict], run: str | None) -> dict:
     unknown = sum(1 for row in rows if row["status"] in ("failed", "no_text"))
     text = (f"{len(rows)} outcome-paper findings: {counts['identified']} identified, {counts['ambiguous']} unclear (ambiguous), "
             f"{counts['not_identified']} not identified, {unknown} unknown (model answer unusable). These are not registered outcomes.")
-    return line("findings", "ok", text, max(row["created_at"] for row in rows), run)
+    state = "ok" if not unknown else ("failed" if unknown == len(rows) else "warning")      # unusable answers are not a clean result
+    return line("findings", state, text, max(row["created_at"] for row in rows), run)
 
 
 def review_line(conn, nct_id: str, has_findings: bool) -> dict:
     if not has_findings:
         return line("review", "not_started", "Nothing to review yet.")
     queue = load_queue(conn, nct_id)
+    if not queue:
+        return line("review", "not_started", "Nothing to review: there are no usable model findings (failed answers cannot be reviewed).")
     waiting = sum(1 for row in queue if row["state"] == NEEDS_REVIEW)
     verified = sum(1 for row in queue if row["state"] == "human_verified")
     unresolved = sum(1 for row in queue if row["state"] == "unresolved")

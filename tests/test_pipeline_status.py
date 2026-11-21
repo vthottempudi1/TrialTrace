@@ -161,3 +161,17 @@ def test_a_failure_after_an_exception_survives_the_callers_rollback(conn, databa
     finally:
         with psycopg.connect(database_url, autocommit=True) as cleaner:
             cleaner.execute("DELETE FROM pipeline_events WHERE nct_id = %s", (nct,))
+
+
+def test_all_unusable_answers_make_findings_failed_and_review_not_started():
+    from trialtrace.pipeline_status import findings_line
+    when = datetime.now(timezone.utc)
+    rows = [{"status": "failed", "error_code": "AuthenticationError", "created_at": when}]
+    assert findings_line(rows, "match-5")["state"] == "failed"
+    mixed = rows + [{"status": "identified", "error_code": None, "created_at": when}]
+    assert findings_line(mixed, "match-5")["state"] == "warning"
+
+
+def test_review_with_no_usable_findings_is_not_ok(conn):
+    from trialtrace.pipeline_status import review_line
+    assert review_line(conn, NCT, True)["state"] == "not_started"
