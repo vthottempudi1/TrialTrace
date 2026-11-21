@@ -15,9 +15,11 @@ Evidence-grounded review of clinical-trial reporting: registry checks, an LLM ab
 ![Cloud Run](https://img.shields.io/badge/Google_Cloud_Run-deployed-4285F4)
 ![Cloud SQL](https://img.shields.io/badge/Cloud_SQL-PostgreSQL_16-4285F4)
 ![Auth](https://img.shields.io/badge/Google_sign--in-email_allowlist-34A853)
+![Cloud Storage](https://img.shields.io/badge/Cloud_Storage-raw_source_backup-4285F4)
+![Observability](https://img.shields.io/badge/Observability-pipeline_status_and_events-F9A825)
 [![CI](https://github.com/vthottempudi1/TrialTrace/actions/workflows/ci.yml/badge.svg)](https://github.com/vthottempudi1/TrialTrace/actions/workflows/ci.yml)
 
-**Registry Checks + LLM Abstract Reader + Quote Validation + Human Review + CI/CD to Cloud Run**
+**Registry Checks + LLM Abstract Reader + Quote Validation + Human Review + Pipeline Observability + CI/CD to Cloud Run**
 
 [Open the dashboard](https://trialtrace-dashboard-1061960202985.us-central1.run.app) (Google sign-in with an allowlisted email)
 
@@ -46,7 +48,9 @@ The project combines deterministic registry checks, an LLM abstract reader, evid
 - **Explore the stored corpus.** View sponsor reporting counts and fixed cross-trial queries.
 - **Export findings.** Download CSV and Markdown reports.
 
-The dashboard provides All trials, One trial, Assisted review, Sponsors, and Patterns views. Review queues distinguish Needs review, Human-verified, and Unresolved findings.
+The dashboard provides All trials, One trial, Assisted review, Sponsors, and Patterns views. Review queues distinguish Needs review, Human-verified, and Unresolved findings, and can be sorted by risk (unclear first).
+
+In **One trial**, a **Pipeline status** panel shows six stages (registry, raw backup, papers, matching, findings, review) with dates and run IDs, keeping "not started", "nothing to read", "failed" and "awaiting review" apart. Stage attempts are logged as structured events (`pipeline_events`), and a stage that started but has not reported back is shown as completion overdue. An **Outcome overview** lists one row per registered outcome (primary first) with its roll-up status, paper evidence and review progress; clicking a row filters the findings below. Counts in the panel are outcome-paper findings, not registered outcomes.
 
 ## v1 evaluation results
 
@@ -62,6 +66,19 @@ The LLM abstract reader was scored on trials it had never seen, against targets 
 | Human agreement with the labels | **90%** (27 of 30), kappa 0.85 | | 30 pairs labelled blind |
 
 About 42% of outcomes are called "unclear" and sent to a reviewer. That is routing, not a wrong answer. Labels were partly AI-drafted and checked by a person, and the sets are small.
+
+## Observability
+
+For every NCT ID the dashboard can answer "where did this trial get stuck, from registry download to human review?"
+
+- **Pipeline status panel** (One trial): six read-only lines, one per stage: registry, raw backup, papers, matching, findings, review. Each shows a state, a plain-language summary, a date and the run ID. It reads the tables that hold the facts, so nothing is copied or can disagree.
+- **Clear states:** *not started*, *nothing to read*, *failed* and *awaiting review* are different things and are shown differently. An unclear model answer is a finding to interpret, not a failure. An old failure next to a newer success is described as older, never as the current state.
+- **Structured stage events:** each stage attempt writes one JSON log line and one row in `pipeline_events` (stage, status, error code, duration, run ID, counts). Writing an event never stops the pipeline.
+- **Overdue detection:** a stage first writes a durable `started` event on its own connection, then a completion event. A start with no completion shows as running, then as *completion overdue (possibly interrupted)* after 15 minutes. That is not proof of a crash, because there is no heartbeat. A failure after an unexpected exception is also written on its own connection, so a rollback cannot erase it.
+- **Raw backup status:** whether the copy of each raw download reached Cloud Storage.
+- **Verified on live Cloud SQL** with a one-off Cloud Run job, including the separate-connection write.
+
+Not built yet: an All trials "needs attention" filter, a heartbeat, and alerts. Cloud Run logs and metrics cover the deployed service itself.
 
 ## Architecture
 
