@@ -28,6 +28,7 @@ from trialtrace.ingest_registry import ingest_trial
 from trialtrace.match_papers import estimate_match_calls, match_trial
 from trialtrace.paper_reader import probe_served_model, reader_settings
 from trialtrace.trial_view import load_abstract, load_outcomes, load_papers, query
+from trialtrace.pipeline_status import pipeline_status
 from trialtrace.review.export_findings import export_rows, to_csv, to_markdown
 from trialtrace.review.highlight import highlighted_markdown, numbered_markdown
 from trialtrace.review.match_review import (STATES, UNRESOLVED_REASONS, count_states, counts_by_trial, filter_rows, load_by_match_ids,
@@ -133,6 +134,22 @@ def show_queue(conn, queue, reviewer, scope, only_key=None):
         show_finding(conn, row, reviewer, scope)
     if len(rows) > SHOW_LIMIT:
         st.caption(f"Showing the first {SHOW_LIMIT} of {len(rows)}. Open a trial in the One trial view for the rest.")
+
+
+STATE_ICONS = {"ok": "✅ ok", "warning": "⚠️ warning", "failed": "❌ failed", "not_started": "⚪ not started",
+               "no_eligible": "➖ nothing to read", "awaiting_review": "⏳ awaiting review", "not_recorded": "➖ not recorded",
+               "running": "🔄 running", "overdue": "⏱ completion overdue (possibly interrupted)"}
+
+
+def show_pipeline_status(conn, nct_id):
+    """One line per stage for this trial: where it is, where it stopped, with dates and run IDs. Read-only."""
+    st.subheader("Pipeline status")
+    lines = pipeline_status(conn, nct_id)
+    table = [{"Stage": item["stage"], "State": STATE_ICONS.get(item["state"], item["state"]), "What happened": item["summary"],
+              "When": item["when"], "Run": item["run_id"], "Last logged attempt": item["last_logged"]} for item in lines]
+    st.dataframe(table, width="stretch", hide_index=True)
+    st.caption("Each line shows the newest facts with their dates; an old failure is not shown as the current state. "
+               "'Nothing to read' and 'not started' are different from 'failed'. Unclear model answers are findings, not failures.")
 
 
 def show_outcome_overview(queue):
@@ -570,6 +587,7 @@ if view == "One trial":
                 st.caption(f"A new Analyze would ask for at most {estimate.new_calls} new model calls "
                            f"({estimate.pairs} pairs, {estimate.reused} stored). Papers per trial are capped at {settings.paper_reader_max_papers}.")
 
+            show_pipeline_status(conn, nct_id)
             outcomes = load_outcomes(conn, nct_id)
             if not outcomes:
                 st.info("This trial is not stored yet. Click Analyze Trial.")

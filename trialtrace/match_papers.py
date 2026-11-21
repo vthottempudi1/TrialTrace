@@ -26,6 +26,7 @@ from trialtrace.compare.abstract_llm import LLMMatch, match_with_llm
 from trialtrace.compare.paper_agreement import EVIDENCE_ERRORS, compare_predictions  # noqa: F401 (re-exported)
 from trialtrace.compare.paper_outcomes import evidence_for_paper
 from trialtrace.config import Settings
+from trialtrace.pipeline_events import record_event, record_started
 from trialtrace.contracts import RegisteredOutcome
 from trialtrace.db.repository import (
     find_reusable_match, get_latest_snapshot, get_outcomes, get_papers_for_trial, save_evidence, save_paper_matches,
@@ -57,6 +58,7 @@ class TrialMatchSummary(BaseModel):
     skipped_pmids: list[str] = Field(default_factory=list)
     llm_calls: int = 0          # real model calls made in this run
     llm_reused: int = 0         # answers copied from an earlier run instead of calling the model
+    llm_failed: int = 0         # model answers that could not be used (the pair is kept with its error code)
     pairs: int = 0
     baseline_enabled: bool = False
     agreements: dict[str, int] = Field(default_factory=dict)
@@ -163,6 +165,38 @@ def match_trial(
     served_model: str | None = None,
     include_baseline: bool = True,
 ) -> TrialMatchSummary:
+    """Match one trial (see _match_trial) and record a pipeline event for the run. The caller commits."""
+    started = time.monotonic()
+    started_id = record_started(conn, nct_id, "matching", run_id)
+    try:
+        summary = _match_trial(conn, settings, nct_id, run_id, client, sleep, refresh, served_model, include_baseline)
+    except Exception as error:                                    # an unexpected crash is recorded, then raised again
+        record_event(conn, nct_id, "matching", "failed", error_code=type(error).__name__, analysis_id=run_id, started=started, started_id=started_id,
+                     durable=True)         # the caller will roll back, so a normal write would vanish
+        raise
+    if summary.status == "done":
+        status = "ok" if summary.llm_failed == 0 else ("failed" if summary.llm_failed >= summary.pairs else "warning")
+        error = None if status == "ok" else "model_answers_failed"
+    else:
+        status = "no_eligible" if summary.status == "no_papers" else "failed"
+        error = None if status == "no_eligible" else summary.status
+    record_event(conn, nct_id, "matching", status, error_code=error, analysis_id=run_id, started=started, started_id=started_id,
+                 detail={"result": summary.status, "pairs": summary.pairs, "calls": summary.llm_calls, "reused": summary.llm_reused,
+                         "failed": summary.llm_failed, "papers_used": summary.papers_used, "papers_skipped": summary.papers_skipped})
+    return summary
+
+
+def _match_trial(
+    conn: psycopg.Connection,
+    settings: Settings,
+    nct_id: str,
+    run_id: str,
+    client: OpenAI | None = None,
+    sleep: Callable[[float], None] = time.sleep,
+    refresh: bool = False,
+    served_model: str | None = None,
+    include_baseline: bool = True,
+) -> TrialMatchSummary:
     """Match every registered outcome of one trial against its chosen papers, and store both predictions. The caller commits.
 
     An LLM answer already stored for exactly the same question is reused, not paid for again (refresh=True asks again).
@@ -212,6 +246,7 @@ def match_trial(
         nct_id=nct_id, status="done", papers_used=len(papers), papers_skipped=len(skipped),
         skipped_pmids=[paper["pmid"] for paper in skipped],
         pairs=sum(row["system"] == "llm" for row in rows), baseline_enabled=include_baseline, agreements=dict(agreements), risks=dict(risks), llm_calls=calls, llm_reused=reused,
+        llm_failed=sum(row["system"] == "llm" and row["status"] == "failed" for row in rows),
     )
 
 

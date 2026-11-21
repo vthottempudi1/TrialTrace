@@ -127,6 +127,7 @@ from trialtrace.db.repository import save_failure, save_snapshot
 from trialtrace.parse.registry_parser import ParseError, extract_evidence, parse_outcomes, parse_study
 from trialtrace.parse.results_parser import extract_results_evidence, parse_results_outcomes
 from trialtrace.safety.safety_parser import parse_safety
+from trialtrace.pipeline_events import record_event, record_started
 from trialtrace.sources.raw_store import save_raw
 from trialtrace.sources.registry import RegistryFetch, fetch_study
 
@@ -178,6 +179,29 @@ def ingest_trial(
     nct_id: str,
     sleep: Callable[[float], None] = time.sleep,
 ) -> IngestResult:
+    """Fetch, save, parse and store one trial, and record a pipeline event for the attempt. The caller commits."""
+    started = time.monotonic()
+    started_id = record_started(conn, nct_id, "registry") if re.fullmatch(NCT_ID_PATTERN, nct_id) else None
+    try:
+        result = _ingest_trial(conn, http, settings, nct_id, sleep)
+    except Exception as error:                                    # an unexpected crash is recorded, then raised again
+        record_event(conn, nct_id, "registry", "failed", error_code=type(error).__name__, started=started, started_id=started_id,
+                     durable=True)         # the caller will roll back, so a normal write would vanish
+        raise
+    if result.status != "invalid_id":
+        worked = result.status in ("new_version", "unchanged")
+        record_event(conn, nct_id, "registry", "ok" if worked else "failed", error_code=None if worked else (result.detail or result.status),
+                     detail={"result": result.status, "attempts": result.attempts}, started=started, started_id=started_id)
+    return result
+
+
+def _ingest_trial(
+    conn: psycopg.Connection,
+    http: httpx.Client,
+    settings: Settings,
+    nct_id: str,
+    sleep: Callable[[float], None] = time.sleep,
+) -> IngestResult:
     """Fetch, save, parse and store one trial. The caller commits."""
     if not re.fullmatch(NCT_ID_PATTERN, nct_id):
         return IngestResult(nct_id=nct_id, status="invalid_id")
@@ -194,6 +218,9 @@ def ingest_trial(
 
     # Step 3: keep the untouched file, even if parsing fails later
     stored = save_raw(nct_id, fetch.url, fetch.retrieved_at, fetch.body, settings.data_dir, bucket=settings.raw_bucket)
+    if stored.backup_status in ("ok", "failed"):
+        record_event(conn, nct_id, "raw_backup", "ok" if stored.backup_status == "ok" else "warning",
+                     error_code=None if stored.backup_status == "ok" else "upload_failed", detail={"source": "clinicaltrials"})
 
     # Step 4: the snapshot and its evidence
     try:

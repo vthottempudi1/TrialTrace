@@ -15,7 +15,7 @@ import logging
 from datetime import datetime
 from pathlib import Path
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 # Fields the registry changes on every response, even when the trial did not
 # change. Left out of the hash, or the same trial would look "new" every day.
@@ -32,6 +32,7 @@ class StoredRaw(BaseModel):
     retrieved_at: datetime
     content_hash: str
     raw_file_path: str
+    backup_status: str | None = Field(default=None, exclude=True)   # not_configured, ok or failed (not saved in the meta file)
 
 
 def compute_content_hash(body: bytes, source: str) -> str:
@@ -108,12 +109,15 @@ def save_raw(
         meta_path.write_text(stored.model_dump_json(indent=2), encoding="utf-8")
         raw_path.write_bytes(body)                        # last: the raw file's existence means "fully saved"
 
+    stored.backup_status = "not_configured"
     if bucket:
+        stored.backup_status = "ok"
         for file in (raw_path, folder / f"{content_hash}.meta.json"):
             key = f"raw/{source}/{nct_id}/{file.name}"
             try:
                 upload_to_bucket(bucket, key, file)
             except Exception as error:                    # a backup problem must not lose the download
+                stored.backup_status = "failed"
                 logging.warning("raw backup to gs://%s/%s failed: %s", bucket, key, error)
 
     return stored

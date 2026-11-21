@@ -30,6 +30,7 @@ from trialtrace.db.repository import save_paper_search, save_papers
 from trialtrace.ingest_registry import MAX_ATTEMPTS, is_temporary
 from trialtrace.parse.pubmed_parser import ParseError, parse_pubmed_xml
 from trialtrace.sources.pubmed import fetch_pubmed_records, search_pubmed
+from trialtrace.pipeline_events import record_event, record_started
 from trialtrace.sources.raw_store import save_raw
 
 PAUSE_SECONDS = 0.4                                 # keeps us under ~3 requests a second
@@ -80,6 +81,30 @@ def ingest_papers(
     nct_id: str,
     sleep: Callable[[float], None] = time.sleep,
 ) -> PaperIngestResult:
+    """Search, fetch, save and link the papers for one trial, and record a pipeline event. The caller commits."""
+    started = time.monotonic()
+    started_id = record_started(conn, nct_id, "papers") if re.fullmatch(NCT_ID_PATTERN, nct_id) else None
+    try:
+        result = _ingest_papers(conn, http, settings, nct_id, sleep)
+    except Exception as error:                                    # an unexpected crash is recorded, then raised again
+        record_event(conn, nct_id, "papers", "failed", error_code=type(error).__name__, started=started, started_id=started_id,
+                     durable=True)         # the caller will roll back, so a normal write would vanish
+        raise
+    if result.status != "invalid_id":
+        status = {"done": "ok", "partial": "warning", "no_papers_found": "no_eligible"}.get(result.status, "failed")
+        record_event(conn, nct_id, "papers", status, error_code=result.detail or (result.status if status == "failed" else None),
+                     detail={"result": result.status, "papers_found": result.papers_found, "papers_new": result.papers_new,
+                             "batches_failed": result.batches_failed}, started=started, started_id=started_id)
+    return result
+
+
+def _ingest_papers(
+    conn: psycopg.Connection,
+    http: httpx.Client,
+    settings: Settings,
+    nct_id: str,
+    sleep: Callable[[float], None] = time.sleep,
+) -> PaperIngestResult:
     """Search, fetch, save and link the papers for one trial. The caller commits."""
     if not re.fullmatch(NCT_ID_PATTERN, nct_id):
         return PaperIngestResult(nct_id=nct_id, status="invalid_id")
@@ -97,6 +122,7 @@ def ingest_papers(
     size = settings.pubmed_batch_size
     batches = [search.pmids[i : i + size] for i in range(0, len(search.pmids), size)]
     papers_new, batches_failed, last_error = 0, 0, None
+    backup_failed = False
 
     for batch in batches:
         fetch, _ = call_with_retries(lambda: fetch_pubmed_records(http, settings, nct_id, batch), sleep)
@@ -108,6 +134,7 @@ def ingest_papers(
         # keep the untouched file BEFORE reading it, so a parser bug never loses the original
         stored = save_raw(nct_id, fetch.url, fetch.retrieved_at, fetch.body, settings.data_dir,
                           source="pubmed", extension="xml", bucket=settings.raw_bucket)
+        backup_failed = backup_failed or stored.backup_status == "failed"
         try:
             papers = parse_pubmed_xml(fetch.body)
         except (ParseError, ValidationError):
@@ -126,6 +153,9 @@ def ingest_papers(
 
     # Step 3: record the search with its batch counts
     save_paper_search(conn, search, attempts, len(batches), batches_failed, last_error)
+    if settings.raw_bucket:
+        record_event(conn, nct_id, "raw_backup", "warning" if backup_failed else "ok",
+                     error_code="upload_failed" if backup_failed else None, detail={"source": "pubmed"})
     if batches_failed == 0:
         status = "done"
     elif batches_failed == len(batches):

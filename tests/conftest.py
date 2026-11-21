@@ -50,3 +50,9 @@ def conn(database_url):
     yield connection
     connection.rollback()
     connection.close()
+
+
+@pytest.fixture(autouse=True)
+def no_durable_events(monkeypatch):
+    """Durable events are committed on their own connection, so tests switch them off to leave no rows behind."""
+    monkeypatch.setattr("trialtrace.pipeline_events.DURABLE_EVENTS", False)
