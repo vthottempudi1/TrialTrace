@@ -302,6 +302,14 @@ Key points
 - Cloud Storage is the deployed raw-source backup. Configured ingestion performs uploads independently of the dashboard runtime. Cloud SQL stores parsed data and evidence. The CI/CD workflow deploys application images; it does not synchronize raw sources or databases.
 - Steps and fixes: `DEPLOY_GCP.md`. The full design: `SYSTEM_DESIGN.md`.
 
+## 3D. Evidence expansion experiment (2026-11-24, not shipped, D108)
+
+- Input: an unresolved outcome (ambiguous or not identified) and its linked papers.
+- Baseline: open-access full text of linked papers, companion papers (NCT search, title search), best passages, the V1 comparison, exact quote check.
+- Agent: asks why it is unresolved, picks the first source, may ask for new search words, stops at a verified answer or 15 calls.
+- Guards: a free-text paper must list the trial's NCT ID; an identified quote needs a number; order-giving passages are dropped; a V1 identified is never lowered.
+- Result: V1 17, baseline 18, agent 19 of 25. Not wired into the dashboard. Code: `trialtrace/evidence_expansion/`.
+
 ## 4. Final combined workflow
 
 ```mermaid

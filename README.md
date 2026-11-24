@@ -67,6 +67,16 @@ The LLM abstract reader was scored on trials it had never seen, against targets 
 
 About 42% of outcomes are called "unclear" and sent to a reviewer. That is routing, not a wrong answer. Labels were partly AI-drafted and checked by a person, and the sets are small.
 
+## Evidence expansion: not adopted
+
+**Evidence-expansion verdict (2026-11-24): neither the fixed expansion baseline nor the agent showed enough practical benefit to justify shipping as part of V1.** On 25 outcomes, V1 had 17 correct final statuses, the expansion baseline 18, and the agent 19. The agent's one-case advantage over the baseline does not establish a meaningful improvement; it used 350 tool/model calls versus 346. Both expansion approaches made one primary false upgrade, missing the target of zero.
+
+The strict model-drafted labels classified 27 of 40 unresolved outcomes as not identified in the readable sources; only 165 of 344 fetched papers had open-access full text. This points to source coverage as the main limit in this experiment. Keep V1 as the core and prioritize wording that states exactly which sources were searched when reporting an abstention. Keep expansion code and guards as experimental work. These results do not prove either approach useless in general: the sample is small, labels had no human review, each configuration ran once, and run 2 followed fixes informed by locked-test errors.
+
+This source-expansion baseline uses model calls and is separate from the keyword baseline in the V1 results above. Full-paper expansion was tested experimentally; it is not a shipped feature. Details: [evidence-expansion results](docs/EVIDENCE_EXPANSION_RESULTS.md).
+
+A follow-up table audit found no missed results in the open-access tables of the 27 not-identified outcomes. Picture tables, figures and supplements were not read.
+
 ## Observability
 
 For every NCT ID the dashboard can answer "where did this trial get stuck, from registry download to human review?"
