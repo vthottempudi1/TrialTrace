@@ -118,3 +118,15 @@ def test_identified_quote_without_number_becomes_ambiguous():
     tools, counts = make_tools({"1": sentence}, [], "identified", sentence)
     result = expand_outcome(make_outcome(), "Title", linked, tools)
     assert result.status == "ambiguous"
+
+
+def test_xml_to_tables_keeps_caption_headers_rows_and_footnote():
+    from trialtrace.evidence_expansion.baseline.get_fulltext import xml_to_tables
+    xml = (b"<article><body><table-wrap><label>Table 2</label><caption><p>Heart rate by group</p></caption>"
+           b"<table><tr><th>Group</th><th>Week 12</th></tr><tr><td>Drug</td><td>60 bpm</td></tr></table>"
+           b"<table-wrap-foot><p>bpm = beats per minute</p></table-wrap-foot></table-wrap></body></article>")
+    tables = xml_to_tables(xml)
+    assert tables[0]["label"] == "Table 2"
+    assert tables[0]["headers"] == ["Group | Week 12"]
+    assert tables[0]["rows"] == ["Drug | 60 bpm"]
+    assert "beats per minute" in tables[0]["footnote"]
