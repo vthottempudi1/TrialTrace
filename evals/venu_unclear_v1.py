@@ -2,7 +2,7 @@
 # evals/venu_unclear_v1.py
 #
 # PURPOSE: Second part of Venu's blind subset for validation v1 (rule: evals/validation_v1/RULE.md): up to 20 pairs
-#          that Claude's draft labelled `unclear`, in the same hash order as the first 30. The sheet shows NO label,
+#          that the AI draft labelled `unclear`, in the same hash order as the first 30. The sheet shows NO label,
 #          so Venu cannot tell which pairs these are. Pairs already in the first 30 are skipped.
 #          Writes venu_subset/pairs_unclear.json, VENU_SHEET_2.md and venu_labels_2.txt. Refuses to overwrite.
 #

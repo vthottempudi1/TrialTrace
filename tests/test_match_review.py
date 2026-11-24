@@ -198,7 +198,7 @@ def test_a_frozen_selection_is_loaded_by_match_id_in_the_given_order_even_after_
 
 # --- AI reviewers: reviewed and shown, but never "Human-verified" and never over a human review ---------------
 
-AI = "Claude (AI)"
+AI = "AI reviewer (AI)"
 
 
 def test_an_ai_review_never_makes_a_finding_human_verified_and_is_still_shown(conn):

@@ -73,12 +73,12 @@ def main() -> None:
     lines = ["# Challenge set v1: freeze record", "",
              f"Written {datetime.now(timezone.utc).isoformat(timespec='seconds')}, after reconciliation and BEFORE `match-papers` ran on these trials (no model answer exists for them).", "",
              f"- Pairs: {len(final)} in {len(trials)} trials. Final labels: yes {sum(v == 'yes' for v in final.values())}, unclear {sum(v == 'unclear' for v in final.values())}, no {sum(v == 'no' for v in final.values())}.",
-             f"- Label authorship: draft labels by Claude from the abstracts alone; Venu's blind subset ({len(venu)} pairs) as recorded in `venu_subset/PROVENANCE.md`; "
+             f"- Label authorship: draft labels by an AI model from the abstracts alone; Venu's blind subset ({len(venu)} pairs) as recorded in `venu_subset/PROVENANCE.md`; "
              "disagreements settled from the source evidence in `reconciliation.json`.",
              f"- ORIGINAL agreement (draft vs Venu, before reconciliation): {original['agree']}/{original['pairs']}"
              + (f", kappa {original['kappa']:.2f}" if original.get("kappa") is not None else "") + ".",
              f"- Agreement AFTER reconciliation (final vs Venu): {after['agree']}/{after['pairs']}. This is not independent agreement: it follows from the decisions.",
-             f"- Disagreements reconciled: {len(decisions)}; labels changed from the draft: {sum(1 for k in decisions if final[k] != drafts[k])}. Decided by Claude (AI) alone from the source text; Venu did not take part (`reconciliation_notes.md`).",
+             f"- Disagreements reconciled: {len(decisions)}; labels changed from the draft: {sum(1 for k in decisions if final[k] != drafts[k])}. Decided by AI reviewer (AI) alone from the source text; Venu did not take part (`reconciliation_notes.md`).",
              f"- Locked system verified unchanged (prompt hash {prompt_hash()}, schema {SCHEMA_VERSION}); 0 model answers existed for these trials.", "",
              "| File | SHA-256 |", "|---|---|"]
     files = [FOLDER / "RULE.md", LOCK, FOLDER / "draw.txt", FOLDER / "selection.json", Path("evals/rubric.md"), FOLDER / "final_labels.json",

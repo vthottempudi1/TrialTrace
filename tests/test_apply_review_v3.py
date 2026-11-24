@@ -102,10 +102,10 @@ def test_undecided_rows_in_the_decisions_file_are_ignored():
 
 def test_the_annotator_names_the_reviewer_and_who_drafted_the_decision():
     drafted = decision(sentence=1)
-    drafted["drafted_by"] = "claude"
+    drafted["drafted_by"] = "ai-model"
     reviewed, _ = build_reviewed([case()], [drafted], "dev")
     annotator = reviewed[0]["label"]["annotator"]
-    assert annotator.startswith("Vijay") and "drafted by claude" in annotator
+    assert annotator.startswith("Vijay") and "drafted by ai-model" in annotator
 
 
 def test_without_a_drafter_only_the_reviewer_is_named():

@@ -39,7 +39,7 @@ UNRESOLVED_REASONS = {
 
 
 def is_ai_reviewer(name: str | None) -> bool:
-    """True for a reviewer name that ends with (AI), for example "Claude (AI)"."""
+    """True for a reviewer name that ends with (AI), for example "AI reviewer (AI)"."""
     return bool(name) and name.strip().lower().endswith("(ai)")
 
 

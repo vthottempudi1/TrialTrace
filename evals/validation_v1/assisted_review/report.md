@@ -1,4 +1,4 @@
-# Assisted review of the model's unclear findings: AI reviewer(s) (Claude (AI))
+# Assisted review of the model's unclear findings: AI reviewer(s) (AI reviewer (AI))
 
 ASSISTED review: the reviewer saw the model's answer. This shows whether the dashboard helps a reviewer reach a justified decision. It is not an independent accuracy measure.
 

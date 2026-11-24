@@ -3,7 +3,7 @@
 #
 # PURPOSE: Build the blind sheets for the human subset of challenge set v1 (rule: evals/challenge_v1/RULE.md):
 #          part 1 = the first 30 pairs of all 151, ordered by SHA-256 of "20261113" + NCT ID + case ID;
-#          part 2 = up to 20 further pairs that Claude's draft labelled `unclear`, in the same order.
+#          part 2 = up to 20 further pairs that the AI draft labelled `unclear`, in the same order.
 #          The sheets show NO label, no failure-mode tag and no model answer, so the reviewer cannot tell which
 #          pairs are which. Writes venu_subset/ (pairs files, sheets, label templates, PROVENANCE.md).
 #          Refuses to overwrite.
