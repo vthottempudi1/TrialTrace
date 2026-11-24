@@ -613,4 +613,4 @@ if view == "One trial":
             picked = show_outcome_overview(queue)
             st.subheader("Review queue")
             show_queue(conn, queue, reviewer, "one", only_key=picked)
-            st.caption("'Not identified' in an abstract does not mean the full paper omits the outcome.")
+            st.caption("'Not identified' means not found in the abstract. Full text, tables and figures were not read, so it does not mean the paper omits the outcome.")
